@@ -153,7 +153,7 @@ for rule in default_rules:
     )
  
 print("WAF rules inserted.")
- 
+
 
 # IN-MEMORY CACHE
 
@@ -207,7 +207,41 @@ def reload_cache():
     regex_count = sum(len(v) for v in CACHE_REGEX.values())
     print(f"  [SUCCESS]   Loaded {ip_count} IP rules and {regex_count} REGEX rules into memory.")
     for zone, rules in CACHE_REGEX.items():
-        print(f"    {zone}: {len(rules)} rules")
+        print(f"  {zone}: {len(rules)} rules")
  
  
 reload_cache()
+
+#operations for analyzer
+def add_new_rule(name: str, rule_type: str, target_zone: str, match_pattern: str, action: str = 'BLOCK'):
+    valid_zones = {'PATH', 'BODY', 'QUERY_STRING', 'HEADERS', 'IP'}
+    if target_zone not in valid_zones and rule_type != 'IP_MATCH':
+        print(f"Invalid rule insertion == cancelled")
+    
+    try:
+        cursor = db.cursor()
+
+        #max id
+        cursor.execute("SELECT MAX(rule_id) FROM rules")
+        result = cursor.fetchone()[0]
+        next_id = 1 if result is None else result + 1
+
+        cursor.execute(
+            """
+            INSERT INTO rules 
+            (rule_id, name, rule_type, target_zone, match_pattern, action, is_active, updated_at) 
+            VALUES (?, ?, ?, ?, ?, ?, TRUE, CURRENT_TIMESTAMP)
+            """,
+            (next_id, name, rule_type, target_zone, match_pattern, action)
+        )
+        
+        print(f"[SUCCES] added rule '{name}' with ID {next_id}")
+
+        reload_cache()
+
+        return next_id
+    except Exception as e:
+        print(f" [ERR] to add rule: {e}")
+        return None
+    finally:
+        cursor.close()

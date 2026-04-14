@@ -8,12 +8,18 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware 
 
-#routes
+#background services
 from db.logger import log_background_listener
+from log_analyzer.analyze import analyzer
+
+
+#routes
 from routes.waf_rules import rule_router
 from routes.network_logs import logs_router
 from routes.waf_actions_log import waf_actions_router
 from routes.reverse_proxy import proxy_router
+
+
 
 #UI dashboard app  PORT 8000
 # !! proxy app on its separated port only
@@ -59,6 +65,9 @@ proxy_app.include_router(proxy_router)
 async def startup_listener():
     asyncio.create_task(log_background_listener())
     print("FIREWALL log batcher ACTIVE :P")
+
+    asyncio.create_task(analyzer())
+    print("Log Analyzer active! Dale!")
 
 
 # 2 SERVERS LAUNCHER
