@@ -7,7 +7,7 @@ load_dotenv()
 FROM = 'firewallapplicenta@gmail.com'
 TO = 'dumitru.izzabela@gmail.com'
 
-#pass !! atentie sa nu lasi asta aici
+#pass !! from env
 PASSWORD = os.getenv("MAIL_APP_PASS")
 
 async def sendMail(subject: str, text: str):
