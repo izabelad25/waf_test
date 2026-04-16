@@ -15,8 +15,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 #background services
 from db.logger import log_background_listener
+from port_bind import start_guard, stop_guard
 from log_analyzer.analyze import analyzer
-#alert sender test
 from log_analyzer.alert import sendMail
 
 #routes
@@ -82,6 +82,14 @@ async def startup_listener():
 
     #await sendMail("WAF ALERT", "NEW -->  test detected ")
 
+    await start_guard(3000) #direct access to port 3000 denied
+
+
+@dashboard_app.on_event("shutdown")
+async def shutdown_listener():
+    await stop_guard()
+    print("F i r e b a l l #### shutdown")
+    
 
 # 2 SERVERS LAUNCHER
 async def main():
@@ -121,7 +129,7 @@ async def main():
                                \_____/
                     """)
     print(f"  Firewall Dashboard  ->  http://127.0.0.1:8000")
-    print(f"  Proxy      ->  http://127.0.0.1:8080")
+    print(f"  Proxy               ->  http://127.0.0.1:8080")
 
     #test email alert
     
