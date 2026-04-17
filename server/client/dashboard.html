@@ -6,25 +6,34 @@
   <title>Fireball WAF</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+  <link href="https://www.fontspace.com/kernel-panic-nbp-font-f15955">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    @font-face {
+      font-family: 'Kernel Panic';
+      src: url('fonts/Kernel-Panic-NBP.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
     :root {
-      --bg:    #000001;
-      --s1:    #13171ebf;
-      --s2:    #00060e;
+      --bg:    #ffffff;
+      --s1:    #000000;
+      --s2:    #ffffff;
       --s3:    #000000;
       --br:    #517c83;
       --br2:   #243040;
       --cyan:  #55ebff;
       --red:   #ff3a5c;
       --grn:   #35fe78;
-      --amb:   #e3f72e;
-      --txt:   #a8b8cc;
-      --txt2:  #d7f9ff;
-      --txt3:  #2e3d50;
+      --amb:   #a000c0;
+      --txt:   #000000;
+      --txt2:  #ffffff;
+      --txt3:  #ffffff;
       --mono:  'JetBrains Mono', monospace;
       --sans:  'Syne', sans-serif;
+      --kernel: 'Kernel Panic', monospace;
     }
 
     body {
@@ -56,10 +65,10 @@
       padding: 0 14px;
     }
     .logo {
-      font-family: var(--sans);
+      font-family: var(--kernel);
       font-weight: 800;
       font-size: 16px;
-      color: #fff;
+      color: #ffffff;
       letter-spacing: -0.5px;
       display: flex;
       align-items: center;
@@ -153,8 +162,8 @@
     }
     .view     { display: none; }
     .view.on  { display: block; }
-    .ph { font-family: var(--sans); font-weight: 700; font-size: 20px; color: #e8eef5; margin-bottom: 2px; }
-    .ps { font-size: 10px; color: var(--txt2); margin-bottom: 16px; }
+    .ph { font-family: var(--kernel); font-weight: 700; font-size: 25px; letter-spacing: 1.2px; color: #000000; margin-bottom: 2px; }
+    .ps { font-size: 12px; color: var(--txt); margin-bottom: 16px; }
 
     /* ── GRIDS ──────────────────────────────────────────────── */
     .g4 { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; margin-bottom: 10px; }
@@ -165,8 +174,8 @@
     .card    { background: var(--s1); border: 1px solid var(--br); border-radius: 5px; padding: 12px; }
     .card-lg { background: var(--s1); border: 1px solid var(--br); border-radius: 5px; padding: 14px; margin-bottom: 10px; }
     .ct {
-      font-size: 9px;
-      color: var(--txt2);
+      font-size: 9.5px;
+      color: var(--bg);
       text-transform: uppercase;
       letter-spacing: 1px;
       margin-bottom: 10px;
@@ -174,9 +183,9 @@
       align-items: center;
       gap: 8px;
     }
-    .ct::after { content: ''; flex: 1; height: 1px; background: var(--br); }
-    .ml  { font-size: 9px; color: var(--txt2); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .8px; }
-    .mv  { font-size: 22px; font-weight: 700; font-family: var(--sans); color: #fff; }
+    /* .ct::after { content: ''; flex: 1; height: 1px; background: var(--br); } */
+    .ml  { font-size: 9px; color: var(--bg); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .8px; }
+    .mv  { font-size: 22px; font-weight: 700; font-family: var(--sans); color: #ffffff; }
     .ms  { font-size: 10px; margin-top: 3px; }
     .up  { color: var(--grn); }
     .dn  { color: var(--red); }
@@ -184,7 +193,7 @@
 
     /* ── BAR ROWS ───────────────────────────────────────────── */
     .bar { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; font-size: 10px; }
-    .bl  { width: 100px; color: var(--txt); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bl  { width: 100px; color: var(--bg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .bt  { flex: 1; height: 3px; background: var(--br2); border-radius: 2px; overflow: hidden; }
     .bf  { height: 100%; border-radius: 2px; }
     .bc  { color: var(--txt2); min-width: 32px; text-align: right; }
@@ -194,14 +203,14 @@
     th {
       text-align: left;
       color: var(--txt2);
-      font-size: 9px;
+      font-size: 12px;
       text-transform: uppercase;
       letter-spacing: .8px;
       padding: 5px 8px;
       border-bottom: 1px solid var(--br);
       font-weight: 400;
     }
-    td { padding: 6px 8px; border-bottom: 1px solid var(--br); color: var(--txt); vertical-align: middle; }
+    td { padding: 6px 8px; border-bottom: 1px solid var(--br); color: var(--txt2); vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: rgba(255,255,255,.015); }
 
@@ -211,7 +220,7 @@
     .t-log  { background: rgba(0,224,255,.07);   color: var(--cyan); border: 1px solid rgba(0,224,255,.2);  }
     .t-ok   { background: rgba(57,255,122,.08);  color: var(--grn);  border: 1px solid rgba(57,255,122,.2); }
     .t-path { background: rgba(127,100,255,.1);  color: #9d85ff;     border: 1px solid rgba(127,100,255,.2);}
-    .t-qs   { background: rgba(255,176,32,.09);  color: var(--amb);  border: 1px solid rgba(255,176,32,.2); }
+    .t-qs   { background: rgba(255,176,32,.09);  color: var(--grn);  border: 1px solid rgba(255,176,32,.2); }
     .t-hdr  { background: rgba(255,58,92,.09);   color: #ff7090;     border: 1px solid rgba(255,58,92,.2);  }
     .t-body { background: rgba(0,224,255,.07);   color: var(--cyan); border: 1px solid rgba(0,224,255,.15); }
 
@@ -250,8 +259,8 @@
       transition: all .15s;
     }
     .btn:hover  { border-color: var(--cyan); color: var(--cyan); }
-    .btn-p      { background: var(--cyan); color: #000; border-color: var(--cyan); font-weight: 700; }
-    .btn-p:hover{ background: #00b5cc; border-color: #00b5cc; color: #000; }
+    .btn-p      { background: var(--cyan); color: #000000; border-color: var(--cyan); font-weight: 700; }
+    .btn-p:hover{ background: #00899b; border-color: #004a53; color: #000; }
     .btn-d      { border-color: rgba(255,58,92,.4); color: var(--red); }
     .btn-d:hover{ background: rgba(255,58,92,.1); }
 
@@ -270,7 +279,7 @@
       content: '';
       position: absolute;
       width: 10px; height: 10px;
-      background: #fff;
+      background: #000000;
       border-radius: 50%;
       top: 3px; left: 3px;
       transition: left .2s;
@@ -296,7 +305,7 @@
       width: 400px;
       max-width: 92vw;
     }
-    .mt { font-family: var(--sans); font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 14px; }
+    .mt { font-family: var(--sans); font-size: 15px; font-weight: 700; color: #ffffff; margin-bottom: 14px; }
     .fr { margin-bottom: 10px; }
     .fl { font-size: 9px; color: var(--txt2); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 4px; }
     .fr input, .fr select, .fr textarea { width: 100%; }
@@ -334,8 +343,8 @@
     /* ── HOME EXTRAS ────────────────────────────────────────── */
     .hcard { background: var(--s1); border: 1px solid var(--br); border-radius: 5px; padding: 16px; margin-bottom: 10px; }
     .host-row  { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-    .host-label{ font-size: 9px; color: var(--txt2); text-transform: uppercase; letter-spacing: .8px; min-width: 60px; }
-    .host-val  { font-size: 12px; color: #fff; font-family: var(--mono); }
+    .host-label{ font-size: 10px; color: var(--txt2); text-transform: uppercase; letter-spacing: .8px; min-width: 60px; }
+    .host-val  { font-size: 12px; color: #000000; font-family: var(--mono); }
     .host-val.cyan { color: var(--cyan); }
     .status-bar{
       display: flex; align-items: center; gap: 6px;
@@ -391,8 +400,8 @@
           
             <div class="host-row"><span class="host-label">IP / host</span><span class="host-val cyan" id="h-ip">127.0.0.1</span></div>
             <div class="host-row"><span class="host-label">Port</span>    <span class="host-val cyan" id="h-port">3000</span></div>
-            <div class="host-row"><span class="host-label">Protocol</span><span class="host-val">HTTP</span></div>
-            <div class="host-row"><span class="host-label">WAF port</span><span class="host-val">8080</span></div>
+            <div class="host-row"><span class="host-label">Protocol</span><span class="host-val cyan">HTTP</span></div>
+            <div class="host-row"><span class="host-label">WAF port</span><span class="host-val cyan">8080</span></div>
             <div class="host-row"><span class="host-label">Alert email</span><span class="host-val" id="h-email" style="color:var(--grn)">—</span></div>
           
             <div class="status-bar" id="status-bar">
@@ -402,12 +411,18 @@
           
             <!-- config form -->
             <div style="margin-top:12px;display:flex;flex-direction:column;gap:6px">
-              <div style="display:flex;gap:6px">
-                <input type="text" id="cfg-ip"   placeholder="IP / hostname" style="flex:1" value="127.0.0.1">
-                <input type="text" id="cfg-port" placeholder="PORT"           style="width:70px" value="3000">
+              <div style="display:flex;gap:5px">
+                <input type="text" id="cfg-ip"   placeholder="IP / hostname" 
+                style="width:100%;background:var(--grn);border:1px solid var(--br);color:var(--txt);
+                            font-family:var(--mono);font-size:11px;padding:5px 8px;border-radius:3px;outline:none;"
+                value="127.0.0.1">
+                <input type="text" id="cfg-port" placeholder="PORT"           
+                style="width:100%;background:var(--grn);border:1px solid var(--br);color:var(--txt);
+                            font-family:var(--mono);font-size:11px;padding:5px 8px;border-radius:3px;outline:none;"
+                style="width:70px" value="3000">
               </div>
               <input type="email" id="cfg-email" placeholder="Alert email"
-                    style="width:100%;background:var(--s2);border:1px solid var(--br);color:var(--txt);
+                    style="width:100%;background:var(--grn);border:1px solid var(--br);color:var(--txt);
                             font-family:var(--mono);font-size:11px;padding:5px 8px;border-radius:3px;outline:none;">
               <button class="btn btn-p" onclick="applyTarget()" style="align-self:flex-end;padding:5px 18px">
                 Apply &amp; Connect
@@ -430,7 +445,7 @@
         <div class="ct">active protection rules summary</div>
         <div class="g3" style="margin-bottom:0">
           <div style="text-align:center;padding:8px 0">
-            <div style="font-size:18px;font-weight:700;font-family:var(--sans);color:#fff" id="sum-block">—</div>
+            <div style="font-size:18px;font-weight:700;font-family:var(--sans);color:#ffffff" id="sum-block">—</div>
             <div style="font-size:9px;color:var(--txt2);margin-top:2px">BLOCK rules</div>
           </div>
           <div style="text-align:center;padding:8px 0;border-left:1px solid var(--br);border-right:1px solid var(--br)">
@@ -473,18 +488,18 @@
     <div class="view" id="view-traffic">
       <div class="ph">"`-._,-'"`-Live traffic-'"`-._,-'</div>
       <div class="ps">· real-time network stream · </div>
-      <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid rgba(57,255,122,.2);border-radius:3px;background:rgba(57,255,122,.04);margin-bottom:10px;font-size:10px;color:var(--grn)">
+      <div style="display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid rgba(9, 255, 0, 0.842);border-radius:3px;background:rgb(0, 0, 0);margin-bottom:10px;font-size:10px;color:var(--grn)">
         <div class="live-dot" style="background:var(--grn)"></div>
         polling every 3s >>> newest entries at top
       </div>
       <div class="card-lg" style="padding:0;margin-bottom:0">
         <div style="display:flex;padding:6px 8px;border-bottom:1px solid var(--br);background:var(--s2);gap:8px">
-          <span style="color:var(--txt2);font-size:9px;min-width:72px">TIMESTAMP</span>
-          <span style="color:var(--txt2);font-size:9px;min-width:40px">MTD</span>
-          <span style="color:var(--txt2);font-size:9px;min-width:108px">CLIENT IP</span>
-          <span style="color:var(--txt2);font-size:9px;flex:1">PATH</span>
-          <span style="color:var(--txt2);font-size:9px;min-width:38px">STATUS</span>
-          <span style="color:var(--txt2);font-size:9px;min-width:44px;text-align:right">LATENCY</span>
+          <span style="color:var(--s1);font-size:9px;min-width:72px">TIMESTAMP</span>
+          <span style="color:var(--s1);font-size:9px;min-width:40px">MTD</span>
+          <span style="color:var(--s1);font-size:9px;min-width:108px">CLIENT IP</span>
+          <span style="color:var(--s1);font-size:9px;flex:1">PATH</span>
+          <span style="color:var(--s1);font-size:9px;min-width:38px">STATUS</span>
+          <span style="color:var(--s1);font-size:9px;min-width:44px;text-align:right">LATENCY</span>
         </div>
         <div id="log-stream" style="max-height:calc(100vh - 220px);overflow-y:auto"></div>
       </div>
@@ -552,7 +567,7 @@
 <!-- ── MODAL ─────────────────────────────────────────────────── -->
 <div class="modal-wrap" id="modal-wrap">
   <div class="modal">
-    <div class="mt">New WAF rule</div>
+    <div class="ml" style="color: #000; font-family: var(--kernel); font-size: 17px;">New WAF rule</div>
     <div class="fr"><div class="fl">Name</div>        <input type="text" id="new-name"    placeholder="e.g. Block SQLi in cookies"></div>
     <div class="fr"><div class="fl">Rule type</div>   <select id="new-type"><option>REGEX_MATCH</option><option>IP_MATCH</option></select></div>
     <div class="fr"><div class="fl">Target zone</div> <select id="new-zone"><option>PATH</option><option>QUERY_STRING</option><option>HEADERS</option><option>BODY</option></select></div>

@@ -84,7 +84,7 @@ async def startup_listener():
     print(r"""+.+"+.+"+.+"FIREWALL log analyzer ACTIVE "+.+"+.+"+.+""")
     print(r"""              +.+"+.+"+.+"+.+"+.+"+.+""")
 
-    await sendMail("WAF ALERT", "NEW -->  test detected ")
+    #await sendMail("WAF ALERT", "NEW -->  test detected ")
 
     #await start_guard(3000) #direct access to port 3000 denied
 
