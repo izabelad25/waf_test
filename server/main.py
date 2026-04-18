@@ -83,7 +83,7 @@ async def startup_listener():
     print(r"""+.+"+.+"+.+"FIREWALL ACTIVE "+.+"+.+"+.+""")
     print(r"""       +.+"+.+"+.+"+.+"+.+"+.+""")
 
-    await sendMail("WAF ALERT", "NEW -->  test detected ")
+    #await sendMail("WAF ALERT", "NEW -->  test detected ")
 
     
 @dashboard_app.on_event("shutdown")

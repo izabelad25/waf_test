@@ -106,7 +106,7 @@ async def main():
     async with httpx.AsyncClient(timeout=10.0) as client:
 
         # Baseline
-        resp = await client.get(f"{PROXY_URL}/api/home")
+        resp = await client.get(f"{PROXY_URL}")
         print(f"\n[BASELINE] /api/home => {resp.status_code} (should be 200)")
 
         # --- Run all simulations ---

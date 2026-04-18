@@ -52,7 +52,7 @@ def print_instructions(public_port: int, internal_port: int):
     print(f"  Next.js:       next dev -p {internal_port}")
     print(f"  npm start:     PORT={internal_port} npm start")
     print()
-    print("  Then open  http://localhost:{public_port}  as normal.")
+    print(f"  Then open  http://localhost:{public_port}  as normal.")
     print(r"""             +.+"+.+"+.+"+.+"+.+"+.+""")
     
 
