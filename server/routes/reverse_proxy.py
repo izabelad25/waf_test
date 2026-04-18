@@ -11,8 +11,8 @@ from datetime import datetime
 import time
 
 from db.init_db import CACHE_IPS, CACHE_REGEX
-#from db.logger import activity_logs_buffer, firewall_actions_buffer
-from db.logger import log_activity, log_action
+from db.logger import activity_logs_buffer, firewall_actions_buffer
+
 
 #proxy state from waf config
 from .waf_config import PROXY_STATE
@@ -34,8 +34,8 @@ RAW_QUERY_RULES = {3, 33}   # Block Double URL Encoding (QUERY)
 
 #log only function for log only rules
 async def _log_only(rule_id: int, trigger: str, request_id: str, timestamp):
-    await log_action(timestamp, request_id, rule_id, "LOG WARNING", trigger)
-
+    #await log_action(timestamp, request_id, rule_id, "LOG WARNING", trigger)
+    firewall_actions_buffer.append((timestamp, request_id, rule_id, "LOG WARNING", trigger))
 
 # this prevents HTTP VERB TAMPERING
 @proxy_router.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"])
@@ -69,9 +69,13 @@ async def reverse_proxy(request: Request, path: str):
     async def block_request(rule_id: int, trigger: str, reason: str):
         print(f"[WAF BLOCK] IP={client_ip} | rule={rule_id} | trigger={trigger!r} | reason={reason}")
 
-        await log_activity(request_id, timestamp, client_ip, method,
-                           full_path, 403, user_agent, 0.0)
-        await log_action(timestamp, request_id, rule_id, "BLOCK", trigger)
+        # await log_activity(request_id, timestamp, client_ip, method,
+        #                    full_path, 403, user_agent, 0.0)
+        # await log_action(timestamp, request_id, rule_id, "BLOCK", trigger)
+
+        activity_logs_buffer.append((request_id, timestamp, client_ip, method,
+                            full_path, 403, user_agent, 0.0))
+        firewall_actions_buffer.append((timestamp, request_id, rule_id, "BLOCK", trigger))
 
         return JSONResponse({"error": "Access denied!"}, status_code=403)
 
@@ -213,8 +217,10 @@ async def reverse_proxy(request: Request, path: str):
 
     response_time_ms = round((time.time() - start_time) * 1000, 2)
 
-    await log_activity(request_id, timestamp, client_ip, method,
-                       full_path, status_code, user_agent, response_time_ms)
+    # await log_activity(request_id, timestamp, client_ip, method,
+    #                    full_path, status_code, user_agent, response_time_ms)
+    activity_logs_buffer.append((request_id, timestamp, client_ip, method,
+                       full_path, status_code, user_agent, response_time_ms))
 
     return StreamingResponse(
         target_resp.aiter_raw(),

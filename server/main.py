@@ -76,22 +76,19 @@ proxy_app.include_router(proxy_router)
 async def startup_listener():
     init_proxy_state()
 
-    from db.log_bridge import start_log_receiver
-
-    asyncio.create_task(start_log_receiver())
-   
+    asyncio .create_task(log_background_listener())
     asyncio.create_task(analyzer())
 
     print(r"""       +.+"+.+"+.+"+.+"+.+"+.+""")
     print(r"""+.+"+.+"+.+"FIREWALL ACTIVE "+.+"+.+"+.+""")
     print(r"""       +.+"+.+"+.+"+.+"+.+"+.+""")
 
-    #await sendMail("WAF ALERT", "NEW -->  test detected ")
+    await sendMail("WAF ALERT", "NEW -->  test detected ")
 
     
 @dashboard_app.on_event("shutdown")
 async def shutdown_listener():
-    #await stop_guard()
+    
     print("F i r e b a l l #### shutdown")
     
 # 2 SERVERS LAUNCHER

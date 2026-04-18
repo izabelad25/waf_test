@@ -1,14 +1,36 @@
-#pastrat ca sa nu refac tot proxy ul
 
-from db.log_bridge import send_activity as log_activity
-from db.log_bridge import send_action   as log_action
+#my version
+import asyncio
+from datetime import datetime
+from db.init_db import db
 
-# backward-compat stubs (nothing appends to these anymore)
-activity_logs_buffer   = []
+#BUFFER == temp storage
+activity_logs_buffer = []
 firewall_actions_buffer = []
 
+#function for writing the batches to DUCKdb
+def logs_writer():
+    global activity_logs_buffer, firewall_actions_buffer
+
+    if not activity_logs_buffer and not firewall_actions_buffer:
+        return
+    
+    try:
+        if activity_logs_buffer:
+            db.executemany("INSERT INTO activity_logs " \
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)", activity_logs_buffer)
+            activity_logs_buffer.clear()
+        
+        if firewall_actions_buffer:
+            db.executemany("INSERT INTO firewall_actions " \
+            "VALUES (?, ?, ?, ?, ?, ?)", firewall_actions_buffer)
+            firewall_actions_buffer.clear()
+    except Exception as e:
+        print(f"Error in writing log batches to DB: {e}")
+
+#background function == runs the writer every second == avoids db crash
 async def log_background_listener():
-    """No-op — receiver runs via start_log_receiver() in main.py startup."""
-    import asyncio
+    #print("Log listener active :p")
     while True:
-        await asyncio.sleep(60)
+        await asyncio.sleep(1)
+        logs_writer()
