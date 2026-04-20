@@ -35,7 +35,7 @@ RAW_QUERY_RULES = {3, 33}   # Block Double URL Encoding (QUERY)
 #log only function for log only rules
 async def _log_only(rule_id: int, trigger: str, request_id: str, timestamp):
     #await log_action(timestamp, request_id, rule_id, "LOG WARNING", trigger)
-    firewall_actions_buffer.append((timestamp, request_id, rule_id, "LOG WARNING", trigger))
+    firewall_actions_buffer.append((str(uuid.uuid4()), timestamp, request_id, rule_id, "LOG WARNING", trigger))
 
 # this prevents HTTP VERB TAMPERING
 @proxy_router.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"])
@@ -75,7 +75,7 @@ async def reverse_proxy(request: Request, path: str):
 
         activity_logs_buffer.append((request_id, timestamp, client_ip, method,
                             full_path, 403, user_agent, 0.0))
-        firewall_actions_buffer.append((timestamp, request_id, rule_id, "BLOCK", trigger))
+        firewall_actions_buffer.append((str(uuid.uuid4()), timestamp, request_id, rule_id, "BLOCK", trigger))
 
         return JSONResponse({"error": "Access denied!"}, status_code=403)
 

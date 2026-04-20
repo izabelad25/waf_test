@@ -12,8 +12,8 @@ def block_and_log(ip: str, trigger: str, reason: str, current_time):
         new_rule_id = add_new_rule("Analyzer " + reason, "IP_MATCH", "IP", ip, action='BLOCK')
         
         firewall_actions_buffer.append((
-            str(uuid.uuid4()), current_time, reason,
-            new_rule_id, "BLOCK", trigger
+            str(uuid.uuid4()), current_time, trigger,
+            new_rule_id, "BLOCK", reason
         ))
 
         print(f"[WAF BLOCK] IP={ip} | trigger={trigger!r} | reason={reason} --> Rules updated!")
@@ -121,6 +121,7 @@ async def analyzer():
     while True:
         #runs every 60 seconds
         await asyncio.sleep(60)
+        cursor = None 
     
         try: 
             cursor = db.cursor()
@@ -134,7 +135,7 @@ async def analyzer():
                            ip = row[0]
                            if ip not in CACHE_IPS:
                                 block_and_log(ip, trigger, reason(row), current_time)
-                                await sendMail("WAF ALERT", "NEW --> " + reason(row) + "detected " + current_time + "\n IP " + ip + "blocked! ")
+                                await sendMail("WAF ALERT", f"NEW --> {reason(row)} detected at {current_time.isoformat()}\n IP {ip} blocked!")
                 except Exception as e:
                     print(f"[ERR analyzer][{check_name}] query failed = {e}")
 
