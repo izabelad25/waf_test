@@ -1,1 +1,4 @@
 .env
+script_analyzer_test.py
+test_default_rules_waf.py
+fireball.db
