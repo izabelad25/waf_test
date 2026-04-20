@@ -27,9 +27,9 @@
       --red:   #ff3a5c;
       --grn:   #35fe78;
       --amb:   #a000c0;
-      --txt:   #000000;   /* text on white bg */
-      --txt2:  #ffffff;   /* text on black bg */
-      --txt3:  #888888;   /* muted text on black bg */
+      --txt:   #000000;
+      --txt2:  #ffffff;
+      --txt3:  #888888;
       --mono:  'JetBrains Mono', monospace;
       --sans:  'Syne', sans-serif;
       --kernel: 'Kernel Panic', monospace;
@@ -127,7 +127,7 @@
       gap: 8px;
       padding: 8px 14px;
       font-size: 11px;
-      color: var(--txt2);        /* white on black sidebar */
+      color: var(--txt2);
       cursor: pointer;
       border-left: 2px solid transparent;
       transition: all .15s;
@@ -138,7 +138,7 @@
     .nav.on    { color: var(--cyan); border-left-color: var(--cyan); background: rgba(0,224,255,.05); }
     .nav-sec {
       font-size: 9px;
-      color: var(--txt3);        /* muted on black sidebar */
+      color: var(--txt3);
       padding: 12px 14px 3px;
       letter-spacing: 1.2px;
     }
@@ -169,13 +169,13 @@
     .g2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; margin-bottom: 10px; }
     .g3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; margin-bottom: 10px; }
 
-    /* ── CARDS  (black background → all text must be white/light) */
+    /* ── CARDS ─────────────────────────────────────────────── */
     .card    { background: var(--s1); border: 1px solid var(--br); border-radius: 5px; padding: 12px; }
     .card-lg { background: var(--s1); border: 1px solid var(--br); border-radius: 5px; padding: 14px; margin-bottom: 10px; }
 
     .ct {
       font-size: 9.5px;
-      color: var(--txt2);        /* FIX: was var(--bg)=black → now white */
+      color: var(--txt2);
       text-transform: uppercase;
       letter-spacing: 1px;
       margin-bottom: 10px;
@@ -183,21 +183,49 @@
       align-items: center;
       gap: 8px;
     }
-    .ml  { font-size: 9px; color: var(--txt2); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .8px; }  /* FIX: was var(--bg) */
+    .ml  { font-size: 9px; color: var(--txt2); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .8px; }
     .mv  { font-size: 22px; font-weight: 700; font-family: var(--sans); color: #ffffff; }
     .ms  { font-size: 10px; margin-top: 3px; }
     .up  { color: var(--grn); }
     .dn  { color: var(--red); }
     .nu  { color: var(--txt2); }
 
-    /* ── BAR ROWS (inside black cards) ─────────────────────── */
+    /* ── STAT CARDS (home runtime) ──────────────────────────── */
+    .stat-mini {
+      display: flex; flex-direction: column; gap: 2px;
+      padding: 10px 12px;
+      background: #0a0a0a;
+      border: 1px solid var(--br2);
+      border-radius: 4px;
+    }
+    .stat-mini-label { font-size: 9px; color: var(--txt3); text-transform: uppercase; letter-spacing: .8px; }
+    .stat-mini-val   { font-size: 18px; font-weight: 700; font-family: var(--sans); color: #fff; }
+    .stat-mini-sub   { font-size: 9px; color: var(--txt3); }
+
+    /* ── THROUGHPUT CHART ───────────────────────────────────── */
+    .throughput-wrap {
+      position: relative;
+      height: 64px;
+      margin-top: 4px;
+    }
+    .throughput-canvas {
+      width: 100%; height: 100%;
+      display: block;
+    }
+    .throughput-label {
+      position: absolute;
+      top: 0; right: 0;
+      font-size: 9px; color: var(--txt3);
+    }
+
+    /* ── BAR ROWS ───────────────────────────────────────────── */
     .bar { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; font-size: 10px; }
-    .bl  { width: 100px; color: var(--txt2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }  /* FIX: was var(--bg) */
+    .bl  { width: 100px; color: var(--txt2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .bt  { flex: 1; height: 3px; background: var(--br2); border-radius: 2px; overflow: hidden; }
     .bf  { height: 100%; border-radius: 2px; }
     .bc  { color: var(--txt2); min-width: 32px; text-align: right; }
 
-    /* ── TABLE (inside black cards) ────────────────────────── */
+    /* ── TABLE ──────────────────────────────────────────────── */
     table { width: 100%; border-collapse: collapse; font-size: 11px; }
     th {
       text-align: left;
@@ -212,6 +240,11 @@
     td { padding: 6px 8px; border-bottom: 1px solid var(--br); color: var(--txt2); vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
     tr:hover td { background: rgba(255,255,255,.04); }
+
+    /* ── RULE TABLE CLICKABLE ROW ───────────────────────────── */
+    .rule-row { cursor: pointer; }
+    .rule-row:hover td { background: rgba(0,224,255,.06) !important; }
+    .rule-row td { transition: background .12s; }
 
     /* ── TAGS ───────────────────────────────────────────────── */
     .tag { display: inline-block; padding: 1px 6px; border-radius: 2px; font-size: 9px; font-weight: 500; white-space: nowrap; }
@@ -232,11 +265,11 @@
     .s403  { color: var(--red); }
     .s502  { color: #e3b000; }
 
-    /* ── FORM CONTROLS (on white main bg) ───────────────────── */
+    /* ── FORM CONTROLS ──────────────────────────────────────── */
     input[type="text"], input[type="number"], input[type="email"], select {
       background: #f4f4f4;
       border: 1px solid #cccccc;
-      color: #000000;              /* black on light input */
+      color: #000000;
       font-family: var(--mono);
       font-size: 11px;
       padding: 5px 8px;
@@ -288,7 +321,7 @@
     }
     .toggle.on::after { left: 17px; }
 
-    /* ── MODAL (white background) ───────────────────────────── */
+    /* ── MODAL ──────────────────────────────────────────────── */
     .modal-wrap {
       display: none;
       position: fixed;
@@ -300,21 +333,25 @@
     }
     .modal-wrap.open { display: flex; }
     .modal {
-      background: #ffffff;        /* white modal */
+      background: #ffffff;
       border: 1px solid #cccccc;
       border-radius: 6px;
       padding: 20px;
       width: 400px;
       max-width: 92vw;
     }
-    .mt { font-family: var(--kernel); font-size: 17px; color: #000000; margin-bottom: 14px; }  /* FIX: black on white */
+    .modal.wide {
+      width: 620px;
+      max-width: 95vw;
+    }
+    .mt { font-family: var(--kernel); font-size: 17px; color: #000000; margin-bottom: 14px; }
     .fr { margin-bottom: 10px; }
-    .fl { font-size: 9px; color: #444444; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 4px; }  /* FIX: dark on white */
+    .fl { font-size: 9px; color: #444444; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 4px; }
     .fr input, .fr select, .fr textarea { width: 100%; }
     textarea {
-      background: #f4f4f4;        /* FIX: light bg */
+      background: #f4f4f4;
       border: 1px solid #cccccc;
-      color: #000000;             /* FIX: black text on light textarea */
+      color: #000000;
       font-family: var(--mono);
       font-size: 11px;
       padding: 6px 8px;
@@ -326,7 +363,62 @@
     textarea:focus { border-color: var(--cyan); }
     .ma { display: flex; gap: 6px; justify-content: flex-end; margin-top: 14px; }
 
-    /* ── LIVE LOG ROW (inside black card) ───────────────────── */
+    /* ── RULE DETAIL MODAL ──────────────────────────────────── */
+    .rule-detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .rule-detail-field {
+      background: #f7f7f7;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 8px 10px;
+    }
+    .rule-detail-field.full { grid-column: 1 / -1; }
+    .rdf-label { font-size: 9px; color: #777; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 4px; }
+    .rdf-val   { font-size: 11px; color: #000; font-family: var(--mono); }
+    .pattern-box {
+      background: #111;
+      border: 1px solid var(--br);
+      border-radius: 4px;
+      padding: 10px 12px;
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 11px;
+      word-break: break-all;
+      line-height: 1.6;
+      margin-top: 4px;
+    }
+    .edit-section {
+      border-top: 1px solid #e0e0e0;
+      margin-top: 14px;
+      padding-top: 14px;
+    }
+    .edit-section-title {
+      font-size: 9px; color: #444; text-transform: uppercase;
+      letter-spacing: .8px; margin-bottom: 10px;
+    }
+    .rule-edit-row {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+    }
+    .rule-edit-row label { font-size: 10px; color: #444; min-width: 80px; }
+    .rule-edit-row input,
+    .rule-edit-row select,
+    .rule-edit-row textarea { flex: 1; }
+    .rule-description {
+      background: #f0f8ff;
+      border-left: 3px solid var(--cyan);
+      padding: 8px 10px;
+      margin-bottom: 12px;
+      font-size: 10px;
+      color: #333;
+      line-height: 1.6;
+      border-radius: 0 3px 3px 0;
+    }
+
+    /* ── LIVE LOG ROW ───────────────────────────────────────── */
     .lrow {
       display: flex;
       align-items: center;
@@ -339,14 +431,14 @@
     @keyframes fin { from{opacity:0;transform:translateX(-3px)} to{opacity:1;transform:none} }
     .lts  { color: var(--txt2); min-width: 72px; }
     .lip  { color: var(--cyan); min-width: 108px; }
-    .lpth { flex: 1; color: var(--txt2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }  /* FIX: was var(--txt)=black */
+    .lpth { flex: 1; color: var(--txt2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .lms  { color: var(--txt2); min-width: 44px; text-align: right; }
 
     /* ── HOME EXTRAS ────────────────────────────────────────── */
     .hcard { background: var(--s1); border: 1px solid var(--br); border-radius: 5px; padding: 16px; margin-bottom: 10px; }
     .host-row  { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
     .host-label{ font-size: 10px; color: var(--txt2); text-transform: uppercase; letter-spacing: .8px; min-width: 80px; }
-    .host-val  { font-size: 12px; color: var(--txt2); font-family: var(--mono); }  /* FIX: was #000000 */
+    .host-val  { font-size: 12px; color: var(--txt2); font-family: var(--mono); }
     .host-val.cyan { color: var(--cyan); }
     .status-bar{
       display: flex; align-items: center; gap: 6px;
@@ -362,6 +454,8 @@
     .spk       { flex: 1; border-radius: 1px; min-height: 2px; }
     .sep       { height: 1px; background: var(--br); margin: 10px 0; }
 
+    .row-filter { display:flex; gap:8px; margin-bottom:10px; align-items:center; flex-wrap:wrap; }
+
     /* ── FORM CONTROLS INSIDE BLACK CARDS ──────────────────── */
     .hcard input[type="number"],
     .hcard input[type="email"],
@@ -370,14 +464,107 @@
       border: 1px solid var(--br);
       color: #ffffff;
     }
-    .hcard input:focus {
-      border-color: var(--cyan);
-    }
-    .hcard span[style*="color:var(--txt2)"],
-    .hcard span[style*="color:var(--amb)"] 
+    .hcard input:focus { border-color: var(--cyan); }
 
-    /* ── LIVE TRAFFIC HEADER ROW ───────────────────────────── */
-    .traffic-header span { color: var(--txt2) !important; }
+    /* ── RUNTIME STATS GRID ─────────────────────────────────── */
+    .runtime-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    /* ── INFO PAGE ──────────────────────────────────────────── */
+    .info-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .ascii-panel {
+      background: var(--s1);
+      border: 1px solid var(--br);
+      border-radius: 5px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .ascii-art {
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.45;
+      color: var(--cyan);
+      white-space: pre;
+      text-align: left;
+      text-shadow: 0 0 12px rgba(85,235,255,.35);
+      animation: asciiGlow 3s ease-in-out infinite alternate;
+    }
+    @keyframes asciiGlow {
+      from { text-shadow: 0 0 8px rgba(85,235,255,.3); }
+      to   { text-shadow: 0 0 20px rgba(85,235,255,.7), 0 0 40px rgba(85,235,255,.2); }
+    }
+    .ascii-caption {
+      font-family: var(--kernel);
+      font-size: 13px;
+      color: var(--grn);
+      margin-top: 20px;
+      letter-spacing: 2px;
+      opacity: .8;
+    }
+    .info-right {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .info-block {
+      background: var(--s1);
+      border: 1px solid var(--br);
+      border-radius: 5px;
+      padding: 14px;
+    }
+    .info-block-title {
+      font-size: 9px;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid var(--br2);
+      padding-bottom: 6px;
+    }
+    .info-item {
+      display: flex;
+      gap: 8px;
+      padding: 5px 0;
+      border-bottom: 1px solid #111;
+      font-size: 10px;
+      align-items: flex-start;
+    }
+    .info-item:last-child { border-bottom: none; }
+    .info-item-ico { color: var(--grn); min-width: 14px; }
+    .info-item-txt { color: var(--txt2); line-height: 1.5; }
+    .info-item-txt strong { color: var(--cyan); font-weight: 500; }
+    .tech-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 2px;
+      font-size: 9px;
+      background: rgba(0,224,255,.07);
+      border: 1px solid rgba(0,224,255,.2);
+      color: var(--cyan);
+      margin: 2px;
+    }
+    .version-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 5px 0;
+      font-size: 10px;
+      border-bottom: 1px solid #111;
+    }
+    .version-row:last-child { border-bottom: none; }
+    .version-key { color: var(--txt3); }
+    .version-val { color: var(--txt2); font-family: var(--mono); }
   </style>
 </head>
 <body>
@@ -403,12 +590,14 @@
     <div class="nav-sec">firewall</div>
     <div class="nav"     onclick="sv('rules',this)">   <span class="nav-ico">☰</span>Rules</div>
     <div class="nav"     onclick="sv('actions',this)"> <span class="nav-ico">></span>Actions<span class="nav-badge" id="badge-count">0</span></div>
+    <div class="nav-sec">system</div>
+    <div class="nav"     onclick="sv('info',this)">    <span class="nav-ico">?</span>Info</div>
   </div>
 
   <!-- ── MAIN CONTENT ────────────────────────────────────────── -->
   <div class="main">
 
-    <!-- HOME ─────────────────────────────────────────── -->
+    <!-- HOME ─────────────────────────────────────── -->
     <div class="view on" id="view-home">
       <div class="ph">"`-._,-'"`-Protected App-'"`-._,-'</div>
       <div class="ps">· configure the target your WAF is shielding ⛨ ·</div>
@@ -419,13 +608,13 @@
 
           <div class="host-row">
             <span class="host-label">Your app</span>
-            <span class="host-val cyan">localhost:<span id="h-public">3000</span></span>
-            <span style="font-size:9px;color:var(--txt3);margin-left:6px">(open this in browser)</span>
+            <span class="host-val cyan">localhost:<span id="h-public">PORT</span></span>
+            <span style="font-size:9px;color:var(--txt3);margin-left:6px">(open your app normally)</span>
           </div>
           <div class="host-row">
             <span class="host-label">WAF routes to</span>
-            <span class="host-val" style="color:var(--txt3)">localhost:<span id="h-internal">3001</span></span>
-            <span style="font-size:9px;color:var(--txt3);margin-left:6px">(start your app here)</span>
+            <span class="host-val" style="color:var(--txt3)">localhost:<span id="h-internal">PORT + 1</span></span>
+            <span style="font-size:9px;color:var(--txt3);margin-left:6px">(run your app here)</span>
           </div>
           <div class="host-row">
             <span class="host-label">Alert email</span>
@@ -456,14 +645,63 @@
           </div>
         </div>
 
+        <!-- RUNTIME STATS CARD -->
         <div class="hcard">
           <div class="ct">----> runtime stats <----</div>
-          <div class="bar"><span class="bl">Requests/min</span><div class="bt"><div class="bf" id="rpm-bar" style="width:62%;background:var(--cyan)"></div></div><span class="bc" id="rpm-val">—</span></div>
-          <div class="bar"><span class="bl">Block rate</span>   <div class="bt"><div class="bf" style="width:0%;background:var(--red)" id="blk-bar"></div></div><span class="bc" id="blk-val">—</span></div>
-          <div class="bar"><span class="bl">Avg latency</span>  <div class="bt"><div class="bf" style="width:15%;background:#e3b000"></div></div><span class="bc">—</span></div>
+
+          <div class="runtime-grid">
+            <div class="stat-mini">
+              <div class="stat-mini-label">Req / min</div>
+              <div class="stat-mini-val" id="rpm-val">—</div>
+              <div class="stat-mini-sub" id="rpm-sub">calculating…</div>
+            </div>
+            <div class="stat-mini">
+              <div class="stat-mini-label">Block rate</div>
+              <div class="stat-mini-val" id="blk-rate-val" style="color:var(--red)">—</div>
+              <div class="stat-mini-sub" id="blk-rate-sub">of all traffic</div>
+            </div>
+            <div class="stat-mini">
+              <div class="stat-mini-label">Avg latency</div>
+              <div class="stat-mini-val" id="avg-lat-val">—</div>
+              <div class="stat-mini-sub">ms / request</div>
+            </div>
+          </div>
+
+          <div class="runtime-grid" style="margin-bottom:0">
+            <div class="stat-mini">
+              <div class="stat-mini-label">Total reqs</div>
+              <div class="stat-mini-val" id="rt-total" style="font-size:14px;color:var(--cyan)">—</div>
+            </div>
+            <div class="stat-mini">
+              <div class="stat-mini-label">Blocked</div>
+              <div class="stat-mini-val" id="rt-blocked" style="font-size:14px;color:var(--red)">—</div>
+            </div>
+            <div class="stat-mini">
+              <div class="stat-mini-label">Passed</div>
+              <div class="stat-mini-val" id="rt-passed" style="font-size:14px;color:var(--grn)">—</div>
+            </div>
+          </div>
+
           <div class="sep"></div>
           <div class="ct">----> request throughput <----</div>
-          <div class="sparkline" id="home-spark"></div>
+
+          <!-- Throughput sparkline (canvas-based) -->
+          <div class="throughput-wrap">
+            <canvas id="throughput-canvas" class="throughput-canvas"></canvas>
+            <span class="throughput-label" id="throughput-peak"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:3px">
+            <span style="font-size:8px;color:var(--txt3)">60s ago</span>
+            <span style="font-size:8px;color:var(--txt3)">now</span>
+          </div>
+
+          <div class="sep"></div>
+          <!-- Blk rate bar -->
+          <div class="bar">
+            <span class="bl">Block rate</span>
+            <div class="bt"><div class="bf" style="width:0%;background:var(--red)" id="blk-bar"></div></div>
+            <span class="bc" id="blk-val">—</span>
+          </div>
         </div>
       </div>
 
@@ -495,7 +733,7 @@
         <div class="card"><div class="ml">Total requests</div><div class="mv" id="ov-total">—</div><div class="ms nu" id="ov-total-sub"></div></div>
         <div class="card"><div class="ml">Blocked</div><div class="mv" id="ov-blocked" style="color:var(--red)">—</div><div class="ms dn" id="ov-blk-sub"></div></div>
         <div class="card"><div class="ml">Active rules</div><div class="mv" id="ov-rules">—</div><div class="ms nu">0 disabled</div></div>
-        <div class="card"><div class="ml">Avg response</div><div class="mv">—</div><div class="ms nu">ms</div></div>
+        <div class="card"><div class="ml">Avg response</div><div class="mv" id="ov-avg-resp">—</div><div class="ms nu">ms</div></div>
       </div>
 
       <div class="g2">
@@ -534,7 +772,7 @@
     <!-- WAF RULES ────────────────────────────────────── -->
     <div class="view" id="view-rules">
       <div class="ph">"`-._,-'"`-Firewall Rules-'"`-._,-'</div>
-      <div class="ps">· Manage detection rules ·</div>
+      <div class="ps">· Manage detection rules · click any rule to inspect & edit ·</div>
       <div class="row-filter">
         <input type="text" id="rsearch" placeholder="Filter by name..." oninput="filterR()">
         <select id="rzone" onchange="filterR()">
@@ -545,7 +783,7 @@
           <option value="">All actions</option>
           <option>BLOCK</option><option>LOG</option>
         </select>
-        <button class="btn btn-p" onclick="openM()">+ New rule</button>
+        <button class="btn btn-p" onclick="openNewRuleModal()">+ New rule</button>
       </div>
       <div class="card-lg" style="padding:0;margin-bottom:0">
         <table style="table-layout:fixed">
@@ -579,11 +817,93 @@
       </div>
     </div>
 
+    <!-- INFO ─────────────────────────────────────────── -->
+    <div class="view" id="view-info">
+      <div class="ph">"`-._,-'"`-About Fireball-'"`-._,-'</div>
+      <div class="ps">· system information · architecture ·</div>
+
+      <div class="info-wrap">
+
+        <!-- ASCII art panel -->
+        <div class="ascii-panel">
+          <pre class="ascii-art"> ___________
+||"+.+"+.+"||            _______
+||         ||           | _____ |
+||FIREWALL.||           ||_____||
+||__"+.+"+_||           |  ___  |
+|  + + + +  |           | |___| |
+    _|_|_   \           |       |
+   (_____)   \          |       |
+              \    ___  |  WEB  |
+       ______  \__/   \_|       |
+      |   _  |      _/  |       |
+      |  ( ) |     /    |_______|
+      |___|__|    /
+           \_____/</pre>
+          <div class="ascii-caption">[ FIREBALL WAF ]</div>
+          <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center">
+            <span class="tech-pill">HTTPX</span>
+            <span class="tech-pill">regex</span>
+            <span class="tech-pill">asyncio</span>
+            <span class="tech-pill">FastAPI</span>
+            <span class="tech-pill">Uvicorn</span>
+            <span class="tech-pill">DuckDB</span>
+            <span class="tech-pill">Python 3.11+</span>
+          </div>
+        </div>
+
+        <!-- Info right column -->
+        <div class="info-right">
+
+          <div class="info-block">
+            <div class="info-block-title"> About Fireball...</div>
+            <div class="info-item">
+              <span class="info-item-ico">*</span>
+              <span class="info-item-txt"><strong>Reverse-proxy WAF</strong> — sits in front of your app, intercepts every HTTP request before it reaches your code.</span>
+            </div>
+            <div class="info-item">
+              <span class="info-item-ico">*</span>
+              <span class="info-item-txt"><strong>Regex engine</strong> — pattern-matches against PATH, QUERY_STRING, HEADERS, and BODY zones using compiled regex rules.</span>
+            </div>
+            <div class="info-item">
+              <span class="info-item-ico">*</span>
+              <span class="info-item-txt"><strong>Behavioral/Volumetric Log Analyzer</strong> — runs every 60s, detects Brute Force, Scanners, DDoS, SQLi/XSS probing from log patterns.</span>
+            </div>
+            <div class="info-item">
+              <span class="info-item-ico">*</span>
+              <span class="info-item-txt"><strong>Zero-config database</strong> — DuckDB stores all request logs and firewall actions in a single embedded file (fireball.db).</span>
+            </div>
+          </div>
+
+          <div class="info-block">
+            <div class="info-block-title"> :.:.:.:.:.: threats covered :.:.:.:.:.: </div>
+            <div class="info-item"><span class="info-item-ico">*</span><span class="info-item-txt"><strong>Path Traversal</strong> — ../,  %2e%2e/, unicode & overlong UTF-8 encodings, Spring ..;/ bypass</span></div>
+            <div class="info-item"><span class="info-item-ico">*</span><span class="info-item-txt"><strong>SQL Injection</strong> — auth bypass, UNION SELECT, blind tautologies, comment obfuscation</span></div>
+            <div class="info-item"><span class="info-item-ico">*</span><span class="info-item-txt"><strong>XSS</strong> — script tags, event handlers, javascript: URIs, HTML entity encoding</span></div>
+            <div class="info-item"><span class="info-item-ico">*</span><span class="info-item-txt"><strong>Command Injection</strong> — RCE payloads in query & body (cat, wget, bash, ${IFS}…)</span></div>
+            <div class="info-item"><span class="info-item-ico">*</span><span class="info-item-txt"><strong>SSRF</strong> — internal IP ranges, file:// dict:// gopher:// protocols</span></div>
+            <div class="info-item"><span class="info-item-ico">*</span><span class="info-item-txt"><strong>Null bytes, double encoding, IIS short names, HTTP verb tampering</strong></span></div>
+          </div>
+
+          <div class="info-block">
+            <div class="info-block-title">⚙ system</div>
+            <div class="version-row"><span class="version-key">Dashboard port</span><span class="version-val">:8000</span></div>
+            <div class="version-row"><span class="version-key">Proxy port</span><span class="version-val">:8080</span></div>
+            <div class="version-row"><span class="version-key">Log batch interval</span><span class="version-val">1 second</span></div>
+            <div class="version-row"><span class="version-key">Analyzer interval</span><span class="version-val">60 seconds</span></div>
+            <div class="version-row"><span class="version-key">IP block cache</span><span class="version-val">in-memory O(1) set</span></div>
+            <div class="version-row"><span class="version-key">DB file</span><span class="version-val">fireball.db</span></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
   </div><!-- /.main -->
 </div><!-- /.app -->
 
-<!-- ── MODAL ─────────────────────────────────────────────────── -->
-<div class="modal-wrap" id="modal-wrap">
+<!-- ── NEW RULE MODAL ─────────────────────────────────────────── -->
+<div class="modal-wrap" id="modal-new">
   <div class="modal">
     <div class="mt">New WAF rule</div>
     <div class="fr"><div class="fl">Name</div>        <input type="text" id="new-name" placeholder="e.g. Block SQLi in cookies"></div>
@@ -592,8 +912,72 @@
     <div class="fr"><div class="fl">Pattern</div>     <textarea id="new-pattern" placeholder="(?i)union[\s\/\*]+select"></textarea></div>
     <div class="fr"><div class="fl">Action</div>      <select id="new-action"><option>BLOCK</option><option>LOG</option></select></div>
     <div class="ma">
-      <button class="btn" onclick="closeM()">Cancel</button>
+      <button class="btn" onclick="closeNewRuleModal()">Cancel</button>
       <button class="btn btn-p" onclick="createRule()">Create rule</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── RULE DETAIL / EDIT MODAL ───────────────────────────────── -->
+<div class="modal-wrap" id="modal-detail">
+  <div class="modal wide">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="mt" style="margin-bottom:0" id="detail-title">Rule #00</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span id="detail-action-tag"></span>
+        <span id="detail-zone-tag"></span>
+      </div>
+    </div>
+
+    <!-- description hint -->
+    <div class="rule-description" id="detail-description"></div>
+
+    <!-- read-only overview -->
+    <div class="rule-detail-grid" id="detail-overview">
+      <div class="rule-detail-field">
+        <div class="rdf-label">Rule ID</div>
+        <div class="rdf-val" id="d-id">—</div>
+      </div>
+      <div class="rule-detail-field">
+        <div class="rdf-label">Type</div>
+        <div class="rdf-val" id="d-type">—</div>
+      </div>
+      <div class="rule-detail-field full">
+        <div class="rdf-label">Regex pattern</div>
+        <div class="pattern-box" id="d-pattern">—</div>
+      </div>
+    </div>
+
+    <!-- editable section -->
+    <div class="edit-section">
+      <div class="edit-section-title">✎ Edit rule</div>
+      <div class="rule-edit-row">
+        <label>Name</label>
+        <input type="text" id="edit-name">
+      </div>
+      <div class="rule-edit-row">
+        <label>Zone</label>
+        <select id="edit-zone">
+          <option>PATH</option><option>QUERY_STRING</option><option>HEADERS</option><option>BODY</option>
+        </select>
+      </div>
+      <div class="rule-edit-row">
+        <label>Action</label>
+        <select id="edit-action">
+          <option>BLOCK</option><option>LOG</option>
+        </select>
+      </div>
+      <div class="rule-edit-row" style="align-items:flex-start">
+        <label style="padding-top:4px">Pattern</label>
+        <textarea id="edit-pattern" style="min-height:70px"></textarea>
+      </div>
+    </div>
+
+    <div class="ma">
+      <button class="btn btn-d" id="detail-del-btn">Delete rule</button>
+      <div style="flex:1"></div>
+      <button class="btn" onclick="closeDetailModal()">Cancel</button>
+      <button class="btn btn-p" onclick="saveRuleEdit()">Save changes</button>
     </div>
   </div>
 </div>
@@ -601,12 +985,56 @@
 <script>
   const WAF_BASE = 'http://127.0.0.1:8000';
 
+  // ── RULE DESCRIPTIONS ──────────────────────────────────────────
+  const RULE_DESCRIPTIONS = {
+    1:  'Detects directory traversal sequences in the URL path: ../, ..\\ and all their encoded forms including Unicode (%u002e), fullwidth (%uff0e), overlong UTF-8 (%c0%ae), double-encoded (%252e), and the Spring Boot ..;/ bypass.',
+    2:  'Blocks direct access to sensitive server files regardless of encoding: /etc/passwd, /etc/shadow, /.env, /wp-config.php, /proc/self/environ, and Kubernetes service account secrets.',
+    3:  'Same traversal detection as Rule 1, applied to query string parameters. Catches file path injection via ?file=../../etc/passwd and all encoding variants.',
+    4:  'Blocks absolute Linux/Kubernetes path references in query parameters: /etc/, /proc/, /var/, /run/, /home/. Prevents direct file disclosure via parameter injection.',
+    5:  'Blocks Windows absolute path references and UNC share paths in query parameters: c:\\windows\\, c:/inetpub/, and \\\\server\\share patterns.',
+    6:  'Applies the same traversal pattern detection to HTTP request headers (Referer, User-Agent, X-Custom-*, Cookie, etc.).',
+    7:  'Detects OS command injection in the request body: ; cat /etc/, | bash, and wget http:// patterns that indicate attempt to execute shell commands.',
+    8:  'Catches null byte injection (%00) in query parameters. Null bytes are used to truncate filenames and bypass server-side extension checks.',
+    9:  'Blocks IIS short-name (8.3 format) enumeration attacks using NTFS alternate data streams: ::$INDEX_ALLOCATION and ::$DATA suffixes.',
+    10: 'Blocks SQL authentication bypass payloads in query params: \' OR \'1\'=\'1, admin\'--, and similar tautology/comment injection patterns.',
+    11: 'Same SQL auth bypass detection as Rule 10, applied to the request body (JSON, form data, etc.).',
+    12: 'Blocks UNION SELECT SQL injection in query parameters including obfuscated forms: UNION/**/SELECT, UNION+ALL+SELECT.',
+    13: 'Same UNION SELECT detection as Rule 12, applied to the POST/PUT/PATCH request body.',
+    14: 'LOG-ONLY: Records requests containing SQL comment syntax (/* */, --, #) that may indicate probing. Does not block — low false positive risk.',
+    15: 'LOG-ONLY: Records requests containing dangerous SQL keywords (SELECT, INSERT, DROP, EXEC, etc.) in query parameters.',
+    16: 'LOG-ONLY: Same keyword detection as Rule 15 applied to the request body.',
+    17: 'LOG-ONLY: Records boolean blind SQL injection tautologies like 1=1, 1<2, 0=0 in query params. High false positive risk, log only.',
+    18: 'Blocks SQL injection attempts in HTTP headers (especially Cookie): UNION SELECT, \'OR\', comment sequences, WAITFOR DELAY, and BENCHMARK().',
+    20: 'Blocks <script> tags in query parameters, including obfuscated variants with spaces and URL-encoded angle brackets.',
+    21: 'Same script tag detection as Rule 20, applied to the request body.',
+    22: 'Blocks XSS event handler injection in query params: onerror=, onload=, onclick= and all DOM event attributes.',
+    23: 'Same event handler detection as Rule 22, applied to the request body.',
+    24: 'Blocks dangerous URI schemes in query params used for XSS: javascript:, vbscript:, data:text/html, data:image/svg.',
+    25: 'Same URI scheme detection as Rule 24, applied to the request body.',
+    26: 'Blocks dangerous HTML tags in query params: <iframe>, <object>, <embed>, <applet>, <form>, <base>, <meta>, <svg>, and <img> with javascript/data src.',
+    27: 'Same dangerous HTML tag detection as Rule 26, applied to the request body.',
+    28: 'Blocks HTML entity-encoded JavaScript characters in query params: &#x41;, &#65; etc. Used to bypass naive XSS filters.',
+    29: 'Blocks XSS payloads embedded in HTTP headers (Referer, User-Agent): script tags, event handlers, and javascript: URIs.',
+    30: 'Blocks null bytes (%00) in the URL path, used to terminate strings and bypass file extension validation.',
+    31: 'Same null byte detection as Rule 30, applied to query string parameters.',
+    32: 'Blocks double URL-encoded characters in the path: %252e (→%2e→.), %252f (→%2f→/), %255c (→%5c→\\). Detects encoding evasion.',
+    33: 'Same double encoding detection as Rule 32, applied to query string parameters.',
+    34: 'Blocks malformed URI characters in the path: bare % not followed by two hex digits, and raw control characters (\\x00–\\x1f, \\x7f).',
+    35: 'Blocks non-printable control characters in query parameters (\\x01–\\x08, \\x7f, etc.) that are used in injection and fuzzing attacks.',
+    36: 'Blocks literal backslash characters in the URL path, used in Windows path traversal and as an IIS alternative to forward-slash.',
+    37: 'Blocks command injection in query params: ; cat, | bash, & whoami, ` id, $(curl), ${IFS} and other shell metacharacter+command combos.',
+    38: 'Same command injection detection as Rule 37, applied to the request body.',
+    39: 'Blocks Server-Side Request Forgery (SSRF) targeting internal IP ranges: 127.x, 10.x, 192.168.x, 172.16-31.x, 169.254.169.254, localhost.',
+    40: 'Blocks SSRF via dangerous URL schemes in query params: file://, dict://, gopher://, ftp:// that can reach internal services.',
+  };
+
+  // ── HELPERS ─────────────────────────────────────────────────────
   function ztag(z) {
     const m = { PATH:'t-path', QUERY_STRING:'t-qs', HEADERS:'t-hdr', BODY:'t-body' };
     return `<span class="tag ${m[z]||''}">${z}</span>`;
   }
   function atag(a) {
-    return `<span class="tag ${a==='BLOCK'?'t-blk':'t-log'}">${a}</span>`;
+    return `<span class="tag ${a==='BLOCK'?'t-blk':'t-log'}">${a||'—'}</span>`;
   }
   function mtag(m) {
     const c = { GET:'mget', POST:'mpost', PUT:'mput', DELETE:'mdel' };
@@ -620,6 +1048,78 @@
     el.classList.add('on');
   }
 
+  // ── THROUGHPUT CANVAS ───────────────────────────────────────────
+  // Stores per-second request counts for last 60 ticks
+  const THROUGHPUT_HISTORY = new Array(60).fill(0);
+  let prevTotal = null;
+
+  function updateThroughputHistory(currentTotal) {
+    const delta = prevTotal === null ? 0 : Math.max(0, currentTotal - prevTotal);
+    prevTotal = currentTotal;
+    THROUGHPUT_HISTORY.push(delta);
+    if (THROUGHPUT_HISTORY.length > 60) THROUGHPUT_HISTORY.shift();
+    drawThroughput();
+  }
+
+  function drawThroughput() {
+    const canvas = document.getElementById('throughput-canvas');
+    if (!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    const W   = canvas.clientWidth;
+    const H   = canvas.clientHeight;
+    canvas.width  = W * dpr;
+    canvas.height = H * dpr;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, W, H);
+
+    const data = THROUGHPUT_HISTORY;
+    const max  = Math.max(...data, 1);
+    const barW = W / data.length;
+
+    // gradient fill under line
+    const grad = ctx.createLinearGradient(0, 0, 0, H);
+    grad.addColorStop(0,   'rgba(85,235,255,0.35)');
+    grad.addColorStop(1,   'rgba(85,235,255,0.02)');
+
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    data.forEach((v, i) => {
+      const x = i * barW + barW / 2;
+      const y = H - (v / max) * (H - 4);
+      if (i === 0) ctx.lineTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.lineTo(W, H);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // line
+    ctx.beginPath();
+    data.forEach((v, i) => {
+      const x = i * barW + barW / 2;
+      const y = H - (v / max) * (H - 4);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = 'rgba(85,235,255,0.85)';
+    ctx.lineWidth   = 1.5;
+    ctx.stroke();
+
+    // current dot
+    const last = data[data.length - 1];
+    const lx   = (data.length - 1) * barW + barW / 2;
+    const ly   = H - (last / max) * (H - 4);
+    ctx.beginPath();
+    ctx.arc(lx, ly, 3, 0, Math.PI * 2);
+    ctx.fillStyle = '#55ebff';
+    ctx.fill();
+
+    // peak label
+    document.getElementById('throughput-peak').textContent = `peak: ${max} req`;
+  }
+
+  // ── SPARKLINE (legacy, used nowhere now, kept for compat) ────────
   function spark(id, color) {
     const el = document.getElementById(id);
     if (!el) return;
@@ -630,6 +1130,7 @@
     ).join('');
   }
 
+  // ── CONFIG ──────────────────────────────────────────────────────
   async function loadConfig() {
     try {
       const res = await fetch(`${WAF_BASE}/waf/config`);
@@ -693,12 +1194,84 @@
     } catch(e) { alert('Could not reach WAF backend.'); }
   }
 
-  function openM()  { document.getElementById('modal-wrap').classList.add('open');    }
-  function closeM() { document.getElementById('modal-wrap').classList.remove('open'); }
-  document.getElementById('modal-wrap').addEventListener('click', function(e) {
-    if (e.target === this) closeM();
+  // ── NEW RULE MODAL ──────────────────────────────────────────────
+  function openNewRuleModal() { document.getElementById('modal-new').classList.add('open'); }
+  function closeNewRuleModal() { document.getElementById('modal-new').classList.remove('open'); }
+  document.getElementById('modal-new').addEventListener('click', function(e) {
+    if (e.target === this) closeNewRuleModal();
   });
 
+  // ── RULE DETAIL MODAL ───────────────────────────────────────────
+  let currentDetailRule = null;
+
+  function openDetailModal(rule) {
+    currentDetailRule = rule;
+    const id   = rule.id || rule.rule_id;
+    const zone = rule.target_zone || rule.zone || '';
+    const name = rule.name || '';
+    const action = rule.action || 'BLOCK';
+    const pattern = rule.match_pattern || rule.pattern || '';
+    const ruleType = rule.rule_type || 'REGEX_MATCH';
+
+    document.getElementById('detail-title').textContent   = `Rule #${id} — ${name}`;
+    document.getElementById('detail-action-tag').innerHTML = atag(action);
+    document.getElementById('detail-zone-tag').innerHTML   = ztag(zone);
+    document.getElementById('d-id').textContent      = `#${id}`;
+    document.getElementById('d-type').textContent    = ruleType;
+    document.getElementById('d-pattern').textContent = pattern;
+
+    // description
+    const desc = RULE_DESCRIPTIONS[id] || 'No description available for this rule.';
+    document.getElementById('detail-description').textContent = desc;
+
+    // populate edit fields
+    document.getElementById('edit-name').value    = name;
+    document.getElementById('edit-zone').value    = zone;
+    document.getElementById('edit-action').value  = action;
+    document.getElementById('edit-pattern').value = pattern;
+
+    // delete button
+    document.getElementById('detail-del-btn').onclick = () => {
+      if (confirm(`Delete rule #${id} "${name}"?`)) {
+        deleteRule(id);
+        closeDetailModal();
+      }
+    };
+
+    document.getElementById('modal-detail').classList.add('open');
+  }
+
+  function closeDetailModal() {
+    document.getElementById('modal-detail').classList.remove('open');
+    currentDetailRule = null;
+  }
+
+  document.getElementById('modal-detail').addEventListener('click', function(e) {
+    if (e.target === this) closeDetailModal();
+  });
+
+  async function saveRuleEdit() {
+    if (!currentDetailRule) return;
+    const id = currentDetailRule.id || currentDetailRule.rule_id;
+    const payload = {
+      name:          document.getElementById('edit-name').value,
+      target_zone:   document.getElementById('edit-zone').value,
+      action:        document.getElementById('edit-action').value,
+      match_pattern: document.getElementById('edit-pattern').value,
+      is_active:     currentDetailRule.is_active !== false,
+    };
+    try {
+      await fetch(`${WAF_BASE}/waf/rules/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      closeDetailModal();
+      loadRules();
+    } catch(e) { alert('Error saving rule — is the WAF backend reachable?'); }
+  }
+
+  // ── RULES ───────────────────────────────────────────────────────
   let ALL_RULES = [];
 
   async function loadRules() {
@@ -712,15 +1285,18 @@
   }
 
   function renderR(rules) {
-    document.getElementById('rules-body').innerHTML = rules.map(r => `
-      <tr>
-        <td style="color:var(--txt3)">#${r.id}</td>
+    document.getElementById('rules-body').innerHTML = rules.map(r => {
+      const id = r.id || r.rule_id;
+      return `
+      <tr class="rule-row" onclick="openDetailModal(${JSON.stringify(r).replace(/"/g,'&quot;')})">
+        <td style="color:var(--txt3)">#${id}</td>
         <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</td>
         <td>${ztag(r.target_zone || r.zone || '')}</td>
         <td>${atag(r.action)}</td>
-        <td><div class="toggle ${r.is_active !== false ? 'on' : ''}" onclick="toggleRule(${r.id}, this)"></div></td>
-        <td><button class="btn btn-d" style="padding:2px 7px;font-size:9px" onclick="deleteRule(${r.id})">Del</button></td>
-      </tr>`).join('');
+        <td onclick="event.stopPropagation()"><div class="toggle ${r.is_active !== false ? 'on' : ''}" onclick="toggleRule(${id}, this)"></div></td>
+        <td onclick="event.stopPropagation()"><button class="btn btn-d" style="padding:2px 7px;font-size:9px" onclick="deleteRule(${id})">Del</button></td>
+      </tr>`;
+    }).join('');
   }
 
   function filterR() {
@@ -755,7 +1331,7 @@
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      closeM(); loadRules();
+      closeNewRuleModal(); loadRules();
     } catch(e) { alert('Error creating rule — is the WAF backend reachable?'); }
   }
 
@@ -779,19 +1355,48 @@
     } catch(e) {}
   }
 
+  // ── ANALYTICS ───────────────────────────────────────────────────
   async function loadAnalytics() {
     try {
       const res  = await fetch(`${WAF_BASE}/waf/analytics`);
       const data = await res.json();
       const total   = data.total_requests   || 0;
       const blocked = data.blocked_requests || 0;
+      const passed  = total - blocked;
       const rate    = total > 0 ? ((blocked / total) * 100).toFixed(1) : '0.0';
+
+      // overview page
       document.getElementById('ov-total').textContent   = total.toLocaleString();
       document.getElementById('ov-blocked').textContent = blocked.toLocaleString();
       document.getElementById('ov-blk-sub').textContent = `${rate}% block rate`;
-      document.getElementById('blk-bar').style.width = Math.min(100, Math.round((blocked / Math.max(total,1)) * 100)) + '%';
+      if (document.getElementById('ov-avg-resp')) {
+        document.getElementById('ov-avg-resp').textContent = data.avg_response_ms != null
+          ? Math.round(data.avg_response_ms) : '—';
+      }
+
+      // home runtime stats
+      document.getElementById('rt-total').textContent   = total.toLocaleString();
+      document.getElementById('rt-blocked').textContent = blocked.toLocaleString();
+      document.getElementById('rt-passed').textContent  = passed.toLocaleString();
+      document.getElementById('blk-rate-val').textContent = rate + '%';
+      document.getElementById('blk-rate-sub').textContent = `${blocked} of ${total} reqs`;
+
+      // avg latency
+      if (data.avg_response_ms != null) {
+        document.getElementById('avg-lat-val').textContent = Math.round(data.avg_response_ms) + 'ms';
+      }
+
+      // block rate bar
+      document.getElementById('blk-bar').style.width = Math.min(100, parseFloat(rate)) + '%';
       document.getElementById('blk-val').textContent  = rate + '%';
+
+      // badge
       document.getElementById('badge-count').textContent = blocked.toLocaleString();
+
+      // update throughput history
+      updateThroughputHistory(total);
+
+      // top IPs
       if (data.top_ips && data.top_ips.length) {
         const maxC = Math.max(...data.top_ips.map(x => x.topIPs || x.count || 0));
         document.getElementById('top-ips-list').innerHTML = data.top_ips.map(x => {
@@ -803,12 +1408,35 @@
           </div>`;
         }).join('');
       }
+
     } catch(e) {
       document.getElementById('ov-total').textContent   = 'offline';
       document.getElementById('ov-blocked').textContent = '—';
     }
   }
 
+  // RPM counter — computes from two analytics snapshots
+  let rpmHistory = [];
+  async function updateRPM() {
+    try {
+      const res  = await fetch(`${WAF_BASE}/waf/analytics`);
+      const data = await res.json();
+      const now  = Date.now();
+      rpmHistory.push({ t: now, n: data.total_requests || 0 });
+      // keep last 2 minutes
+      rpmHistory = rpmHistory.filter(p => now - p.t < 120000);
+      if (rpmHistory.length >= 2) {
+        const oldest = rpmHistory[0];
+        const newest = rpmHistory[rpmHistory.length - 1];
+        const elapsed = (newest.t - oldest.t) / 60000; // in minutes
+        const rpm = elapsed > 0 ? Math.round((newest.n - oldest.n) / elapsed) : 0;
+        document.getElementById('rpm-val').textContent = rpm.toLocaleString();
+        document.getElementById('rpm-sub').textContent = `per minute`;
+      }
+    } catch(e) {}
+  }
+
+  // ── LOGS ────────────────────────────────────────────────────────
   let knownLogIds = new Set();
 
   async function loadLogs() {
@@ -838,6 +1466,7 @@
     } catch(e) {}
   }
 
+  // ── ACTIONS ─────────────────────────────────────────────────────
   async function loadActions() {
     try {
       const res  = await fetch(`${WAF_BASE}/waf/actions?limit=50`);
@@ -858,18 +1487,19 @@
     }
   }
 
-  spark('home-spark', '#00e0ff');
+  // ── INIT ────────────────────────────────────────────────────────
   loadConfig();
   loadRules();
   loadAnalytics();
   loadLogs();
   loadActions();
+  updateRPM();
 
   setInterval(loadLogs,       3000);
   setInterval(loadAnalytics, 10000);
   setInterval(loadActions,   10000);
   setInterval(checkReachable, 8000);
-  setInterval(() => spark('home-spark', '#00e0ff'), 7000);
+  setInterval(updateRPM,     15000);
 </script>
 </body>
 </html>
