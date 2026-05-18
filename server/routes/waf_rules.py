@@ -103,7 +103,8 @@ async def get_all_rules():
 @rule_router.post("/waf/rules")
 async def create_rule(rule: RuleCreate):
     #validate regex -- compiles?
-    validate_regex(rule.match_pattern)
+    if(rule.rule_type=='REGEX_MATCH'):
+        validate_regex(rule.match_pattern)
 
     #check conflict -- duplicate?
     conflicts = check_conflicts(rule.target_zone, rule.match_pattern, rule.action)
