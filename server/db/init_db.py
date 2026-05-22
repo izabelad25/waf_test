@@ -55,97 +55,124 @@ db.execute("""
 
 default_rules = [
     #Path traversal 
-    (1, 'Block DIRECTORY Traversal', 'REGEX_MATCH', 'PATH', r'(?i)(?:\.\.(?:;|%00)*[/\\]|%u002e|%uff0e|%c0%ae|%c0%2e|%e0%40%ae|%252e|\.\.;/)', 'BLOCK'),
+    (1, 'Block DIRECTORY Traversal', 'REGEX_MATCH', 'PATH', 
+     r'(?i)(?:\.\.(?:;|%00)*[/\\]|%u002e|%uff0e|%c0%ae|%c0%2e|%e0%40%ae|%252e)', 'BLOCK'),
     
-    (2, 'Block DIRECTORY Traversal to Sensitive Files', 'REGEX_MATCH', 'PATH', r'(?i)(?:^|/)(?:\.env|etc/(?:passwd|shadow|group|hosts|mysql)|windows/win\.ini|wp-config\.php|proc/self/environ|run/secrets/kubernetes)', 'BLOCK'),
-    
-    (3, 'Block DIRECTORY Traversal (query)', 'REGEX_MATCH', 'QUERY_STRING', r'(?i)(?:\.\.(?:;|%00)*[/\\]|%u002e|%uff0e|%c0%ae|%c0%2e|%e0%40%ae|%252e|\.\.;/)', 'BLOCK'),
-    
-    (4, 'Block DIRECTORY Absolute Traversal (Linux+Kubernetes)', 'REGEX_MATCH', 'QUERY_STRING', r'(?i)(?:^|[?&=])\s*[/\\](?:etc|proc|var|run|home)[/\\]', 'BLOCK'),
-    
-    (5, 'Block DIRECTORY Absolute Traversal (Windows)', 'REGEX_MATCH', 'QUERY_STRING', r'(?i)(?:c:[/\\](?:windows|inetpub|sysprep|system32)|\\\\(?:localhost|[\w.-]+)\\[a-z$])', 'BLOCK'),
-    
-    (6, 'Block Traversal (Headers)', 'REGEX_MATCH', 'HEADERS', r'(?i)(?:\.\.(?:;|%00)*[/\\]|%u002e|%uff0e|%c0%ae|%c0%2e|%e0%40%ae|%252e|\.\.;/)', 'BLOCK'),
-   
-    (7, 'Block OS Command Injection', 'REGEX_MATCH', 'BODY', r'(?i)(;\s*cat\s+\/etc\/|\|\s*bash|wget\s+http)', 'BLOCK'),
+    (2, 'Block DIRECTORY Traversal to Sensitive Files', 'REGEX_MATCH', 'PATH', 
+     r'(?i)(?:^|/)(?:\.env|etc/(?:passwd|shadow|group|hosts|mysql)|windows/win\.ini|proc/self/environ|run/secrets/kubernetes)', 
+     'BLOCK'),
 
-    #null byte injection
-    (8, 'Block Null Byte Injection', 'REGEX_MATCH', 'QUERY_STRING', r'%00', 'BLOCK'),
-    #IIS win short name 
-    (9, 'Block IIS Short Name Scan', 'REGEX_MATCH', 'PATH', r'(?i)::(?:\$INDEX_ALLOCATION|\$DATA)', 'BLOCK'),
+    (3, 'Block DIRECTORY Absolute Traversal (Linux, Kubernetes)', 'REGEX_MATCH', 'QUERY_STRING', 
+     r'(?i)\s*[/\\](?:etc|proc|var|run|home)[/\\]', 'BLOCK'),
+
+    (4, 'Block DIRECTORY Absolute Traversal (Windows)', 'REGEX_MATCH', 'PATH', 
+     r'(?i)(?:c:[/\\](?:windows|inetpub|sysprep|system32)|\\\\(?:localhost|[\w.-]+)\\[a-z$])', 'BLOCK'),
+    
+    (5, 'Block DIRECTORY Traversal (query)', 'REGEX_MATCH', 'QUERY_STRING', 
+     r'(?i)(?:\.\.(?:;|%00)*[/\\]|%u002e|%uff0e|%c0%ae|%c0%2e|%e0%40%ae|%252e)', 'BLOCK'),
+
+    (6, 'Block DIRECTORY Traversal to Sensitive Files (query)', 'REGEX_MATCH', 'QUERY_STRING', 
+     r'(?i)(?:^|/)(?:\.env|etc/(?:passwd|shadow|group|hosts|mysql)|windows/win\.ini|proc/self/environ|run/secrets/kubernetes)', 
+     'BLOCK'),
+    
+    
+    (7, 'Block DIRECTORY Absolute Traversal (Windows) (query)', 'REGEX_MATCH', 'QUERY_STRING', 
+     r'(?i)(?:c:[/\\](?:windows|inetpub|sysprep|system32)|\\\\(?:localhost|[\w.-]+)\\[a-z$])', 'BLOCK'),
+    
+    (8, 'Block DIRECTORY Traversal (Headers)', 'REGEX_MATCH', 'HEADERS', 
+     r'(?i)(?:\.\.(?:;|%00)*[/\\]|%u002e|%uff0e|%c0%ae|%c0%2e|%e0%40%ae|%252e)', 'BLOCK'),
+    
+    (9, 'Block DIRECTORY Traversal to Sensitive Files (Headers)', 'REGEX_MATCH', 'HEADERS', 
+     r'(?i)(?:^|/)(?:\.env|etc/(?:passwd|shadow|group|hosts|mysql)|windows/win\.ini|proc/self/environ|run/secrets/kubernetes)', 
+     'BLOCK')
+
+    (10, 'Block DIRECTORY Absolute Traversal (Windows) (Headers)', 'REGEX_MATCH', 'HEADERS', 
+     r'(?i)(?:c:[/\\](?:windows|inetpub|sysprep|system32)|\\\\(?:localhost|[\w.-]+)\\[a-z$])', 'BLOCK'),
+   
+    
     
     #SQL injection rules
-    (10, 'Block SQLi Auth Bypass', 'REGEX_MATCH', 'QUERY_STRING', r"(?i)(?:'\s*(?:or|and)\s*'?\w|'\s*(?:or|and)\s*'[^']*'='|--(?:\s|$)|;\s*--)", 'BLOCK'),
-    
-    (11, 'Block SQLi Auth Bypass (Body)', 'REGEX_MATCH', 'BODY', r"(?i)(?:'\s*(?:or|and)\s*'?\w|'\s*(?:or|and)\s*'[^']*'='|--(?:\s|$)|;\s*--)", 'BLOCK'),
-    
-    (12, 'Block SQLi UNION SELECT', 'REGEX_MATCH', 'QUERY_STRING', r"(?i)union[\s\/*\/!+#-]*(?:all[\s\/*\/!+#-]*)?select", 'BLOCK'),
 
-    (13, 'Block SQLi UNION SELECT (Body)', 'REGEX_MATCH', 'BODY', r"(?i)union[\s\/*\/!+#-]*(?:all[\s\/*\/!+#-]*)?select", 'BLOCK'),
-
-    ##########risk for false blocking 14-16######################
-    (14, 'LOG SQLi Comment Obfuscation', 'REGEX_MATCH', 'QUERY_STRING', r"(?i)(?:/\*.*?\*/|/\*![\d]*\s|--[^\r\n]*|#[^\r\n]*)", 'LOG'),
-
-    (15, 'LOG SQLi Dangerous Keywords', 'REGEX_MATCH', 'QUERY_STRING', r"(?i)\b(?:select|insert|update|delete|drop|truncate|exec(?:ute)?|xp_|sp_|information_schema|sysobjects|syscolumns|waitfor[\s+]delay|benchmark\s*\(|sleep\s*\()\b", 'LOG'),
-
-    (16, 'LOG SQLi Dangerous Keywords (Body)', 'REGEX_MATCH', 'BODY', r"(?i)\b(?:select|insert|update|delete|drop|truncate|exec(?:ute)?|xp_|sp_|information_schema|sysobjects|syscolumns|waitfor[\s+]delay|benchmark\s*\(|sleep\s*\()\b", 'LOG'),
+    (11, 'Block SQLi Auth Bypass', 'REGEX_MATCH', 'QUERY_STRING', 
+     r"(?i)(?:'\s*(?:or|and)\s*'?\w|'\s*(?:or|and)\s*'[^']*'='|--(?:\s|$)|;\s*--)", 'BLOCK'),
     
-    (17, 'LOG SQLi Boolean Blind', 'REGEX_MATCH', 'QUERY_STRING', r"(?i)(?:\d+\s*[<=>]=?\s*\d+|'\s*=\s*'|and\s+\d+\s*[<=>]=?\s*\d+|or\s+\d+\s*[<=>]=?\s*\d+|1\s*=\s*1|0\s*=\s*0)", 'LOG'),
-    ##########################################################
+    (12, 'Block SQLi Auth Bypass (Body)', 'REGEX_MATCH', 'BODY', 
+     r"(?i)(?:'\s*(?:or|and)\s*'?\w|'\s*(?:or|and)\s*'[^']*'='|--(?:\s|$)|;\s*--)", 'BLOCK'),
     
-    (18, 'Block SQLi in Headers (Cookie)', 'REGEX_MATCH', 'HEADERS', r"(?i)(?:union[\s\/\*]+select|'\s*(?:or|and)\s*'|--[^\r\n]*|/\*.*?\*/|waitfor[\s+]delay|benchmark\s*\()", 'BLOCK'),
+    (13, 'Block SQLi UNION SELECT', 'REGEX_MATCH', 'QUERY_STRING', 
+     r"(?i)union[\s\/*\/!+#-]*(?:all[\s\/*\/!+#-]*)?select", 'BLOCK'),
+
+    (14, 'Block SQLi UNION SELECT (Body)', 'REGEX_MATCH', 'BODY', 
+     r"(?i)union[\s\/*\/!+#-]*(?:all[\s\/*\/!+#-]*)?select", 'BLOCK'),
+
+    ##########risk for false blocking 15-17######################
+
+    (15, 'LOG SQLi Comment Obfuscation', 'REGEX_MATCH', 'QUERY_STRING', 
+     r"(?i)(?:/\*.*?\*/|/\*![\d]*\s|--[^\r\n]*|#[^\r\n]*)", 'LOG'),
+
+    (16, 'LOG SQLi Keywords', 'REGEX_MATCH', 'QUERY_STRING', 
+     r"(?i)\b(?:select|insert|update|delete|drop|truncate|exec(?:ute)?|"
+     r"xp_|sp_|information_schema|sysobjects|syscolumns|waitfor[\s+]delay|"
+     r"benchmark\s*\(|sleep\s*\()\b", 'LOG'),
+
+    (17, 'LOG SQLi Keywords (Body)', 'REGEX_MATCH', 'BODY', 
+     r"(?i)\b(?:select|insert|update|delete|drop|truncate|exec(?:ute)?|"
+     r"xp_|sp_|information_schema|sysobjects|syscolumns|waitfor[\s+]delay|"
+     r"benchmark\s*\(|sleep\s*\()\b", 'LOG'),
+    
+    
+    (18, 'Block SQLi in Headers', 'REGEX_MATCH', 'HEADERS', 
+     r"(?i)(?:union[\s\/\*]+select|'\s*(?:or|and)\s*'|--[^\r\n]*|/\*.*?\*/|waitfor[\s+]delay|benchmark\s*\()", 
+    'BLOCK'),
     
     #cross site scripting rules XSS
-    (20, 'Block XSS Script Tags', 'REGEX_MATCH', 'QUERY_STRING', r"(?i)(?:<\s*script[\s>\/]|%3c\s*script)", 'BLOCK'),
+    (19, 'Block XSS Script Tags', 'REGEX_MATCH', 'QUERY_STRING', 
+     r"(?i)<\s*script[\s>\/]", 'BLOCK'),
 
-    (21, 'Block XSS Script Tags (Body)', 'REGEX_MATCH', 'BODY', r"(?i)<\s*script[\s>\/]", 'BLOCK'),
+    (20, 'Block XSS Script Tags (Body)', 'REGEX_MATCH', 'BODY', 
+     r"(?i)<\s*script[\s>\/]", 'BLOCK'),
 
-    (22, 'Block XSS Event Handlers', 'REGEX_MATCH', 'QUERY_STRING', r"(?i)\bon(?:error|load|click|mouseover|mouseout|focus|blur|change|submit|keydown|keyup|keypress|input|select|dblclick|contextmenu|drag|drop|copy|paste|cut|scroll|resize|abort|canplay|ended|pause|play|seeking|stalled|suspend|volumechange|waiting|message|open|close|beforeunload|hashchange|popstate|storage|online|offline|animationstart|animationend|transitionend)\s*=", 'BLOCK'),
+    (21, 'Block XSS Event Handlers', 'REGEX_MATCH', 'QUERY_STRING', 
+     r"(?i)\bon(?:error|load|click|mouseover|mouseout|focus|blur|change|submit|"
+     r"keydown|keyup|keypress|input|select|dblclick|contextmenu|drag|drop|copy|"
+     r"paste|cut|scroll|resize|abort|canplay|ended|pause|play|seeking|stalled|"
+     r"suspend|volumechange|waiting|message|open|close|beforeunload|hashchange|"
+     r"popstate|storage|online|offline|animationstart|animationend|transitionend)\s*=)", 'BLOCK'),
 
-    (23, 'Block XSS Event Handlers (Body)', 'REGEX_MATCH', 'BODY', r"(?i)\bon(?:error|load|click|mouseover|mouseout|focus|blur|change|submit|keydown|keyup|keypress|input|select|dblclick|contextmenu|drag|drop|copy|paste|cut|scroll|resize|abort|canplay|ended|pause|play|seeking|stalled|suspend|volumechange|waiting|message|open|close|beforeunload|hashchange|popstate|storage|online|offline|animationstart|animationend|transitionend)\s*=", 'BLOCK'),
+    (22, 'Block XSS Event Handlers (Body)', 'REGEX_MATCH', 'BODY', 
+     r"(?i)\bon(?:error|load|click|mouseover|mouseout|focus|blur|change|submit|"
+     r"keydown|keyup|keypress|input|select|dblclick|contextmenu|drag|drop|copy|"
+     r"paste|cut|scroll|resize|abort|canplay|ended|pause|play|seeking|stalled|"
+     r"suspend|volumechange|waiting|message|open|close|beforeunload|hashchange|"
+     r"popstate|storage|online|offline|animationstart|animationend|transitionend)\s*=)", 'BLOCK'),
 
-    (24, 'Block XSS Javascript URI', 'REGEX_MATCH', 'QUERY_STRING', r"(?i)(?:javascript|vbscript)\s*:|data:(?:text/html|application/[a-z+]+|image/svg)", 'BLOCK'),
+    (23, 'Block XSS Javascript URI', 'REGEX_MATCH', 'QUERY_STRING', 
+     r"(?i)(?:javascript|vbscript)\s*:|data:(?:text/html|application/[a-z+]+|image/svg)", 'BLOCK'),
 
-    (25, 'Block XSS Javascript URI (Body)', 'REGEX_MATCH', 'BODY', r"(?i)(?:javascript|vbscript)\s*:|data:(?:text/html|application/[a-z+]+|image/svg)", 'BLOCK'),
+    (24, 'Block XSS Javascript URI (Body)', 'REGEX_MATCH', 'BODY', 
+     r"(?i)(?:javascript|vbscript)\s*:|data:(?:text/html|application/[a-z+]+|image/svg)", 'BLOCK'),
 
-    (26, 'Block XSS Dangerous HTML Tags', 'REGEX_MATCH', 'QUERY_STRING', r"(?i)<\s*(?:iframe|object|embed|applet|form|base|link|meta|svg|img\s[^>]*src\s*=\s*[\"']?(?:javascript|data))[^>]*>", 'BLOCK'),
+   
+    (25, 'Block XSS in Headers', 'REGEX_MATCH', 'HEADERS', 
+     r"(?i)(?:<\s*script|javascript\s*:|vbscript\s*:|data\s*:text\/html|"
+     r"\bon(?:error|load|click|mouseover|mouseout|focus|blur|change|submit|"
+     r"keydown|keyup|keypress|input|select|dblclick|contextmenu|drag|drop|copy|"
+     r"paste|cut|scroll|resize|abort|canplay|ended|pause|play|seeking|stalled|"
+     r"suspend|volumechange|waiting|message|open|close|beforeunload|hashchange|"
+     r"popstate|storage|online|offline|animationstart|animationend|transitionend)\s*=)", 'BLOCK'),
 
-    (27, 'Block XSS Dangerous HTML Tags (Body)', 'REGEX_MATCH', 'BODY', r"(?i)<\s*(?:iframe|object|embed|applet|form|base|link|meta|svg|img\s[^>]*src\s*=\s*[\"']?(?:javascript|data))[^>]*>", 'BLOCK'),
+    (26, 'Block OS Command Injection', 'REGEX_MATCH', 'QUERY_STRING', 
+      r'(?i)(?:[;&|`$]\s*(?:cat|ls|id|whoami|curl|wget|bash|sh|cmd|powershell)\b|\$\(|\$\{IFS\})', 'BLOCK'),
 
-    (28, 'Block XSS HTML Entity Encoded JS', 'REGEX_MATCH', 'QUERY_STRING', r"(?i)&#(?:x0*[4-9a-f][0-9a-f]|0*(?:[4-9]\d|1[01]\d));?", 'BLOCK'),
+    (27, 'Block Command Injection (BODY)', 'REGEX_MATCH', 'BODY', 
+     r'(?i)(?:[;&|`$]\s*(?:cat|ls|id|whoami|curl|wget|bash|sh|cmd|powershell)\b|\$\(|\$\{IFS\})', 'BLOCK'),
 
-    (29, 'Block XSS in Headers', 'REGEX_MATCH', 'HEADERS', r"(?i)(?:<\s*script|on\w+\s*=|javascript\s*:|vbscript\s*:|data\s*:text\/html)", 'BLOCK'),
+    #null byte injection
 
-    #URI/URL structure check
-    (30, 'Block Null Bytes in URI', 'REGEX_MATCH', 'PATH', r'%00', 'BLOCK'),
+    (28, 'Block Null Bytes (path)', 'REGEX_MATCH', 'PATH', r'%00', 'BLOCK'),
 
-    (31, 'Block Null Bytes in Query', 'REGEX_MATCH', 'QUERY_STRING', r'%00', 'BLOCK'),
-
-    (32, 'Block Double URL Encoding', 'REGEX_MATCH', 'PATH', r"(?i)%25(?:2e|2f|5c|00|3c|3e|27|22)", 'BLOCK'),
-
-    (33, 'Block Double URL Encoding (Query)', 'REGEX_MATCH', 'QUERY_STRING', r"(?i)%25(?:2e|2f|5c|00|3c|3e|27|22)", 'BLOCK'),
-
-    (34, 'Block Malformed URI Characters', 'REGEX_MATCH', 'PATH', r"(?:%(?![0-9a-fA-F]{2})|[\x00-\x08\x0b\x0c\x0e-\x1f\x7f])", 'BLOCK'),
-
-    (35, 'Block Non-Printable Characters in Query', 'REGEX_MATCH', 'QUERY_STRING', r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", 'BLOCK'),
-
-    (36, 'Block Backslash in URI Path', 'REGEX_MATCH', 'PATH', r"\\", 'BLOCK'),
-
-    #RCE remote code exec
-    (37, 'Block Command Injection', 'REGEX_MATCH', 'QUERY_STRING', r'(?i)(?:[;&|`$%](?:7[Cc]|26)?\s*(?:cat|ls|id|whoami|curl|wget|bash|sh|cmd|powershell)\b'
-     r'|%7[Cc]\s*(?:cat|ls|id|whoami|curl|wget|bash|sh|cmd|powershell)\b'
-     r'|%26\s*(?:cat|ls|id|whoami|curl|wget|bash|sh|cmd|powershell)\b'
-     r'|\|\s*(?:cat|ls|id|whoami|curl|wget|bash|sh|cmd|powershell)\b'
-     r'|&\s*(?:cat|ls|id|whoami|curl|wget|bash|sh|cmd|powershell)\b'
-     r'|\$\(|\$\{IFS\})', 'BLOCK'),
-
-    (38, 'Block Command Injection (BODY)', 'REGEX_MATCH', 'BODY', r'(?i)(?:[;&|`$]\s*(?:cat|ls|id|whoami|curl|wget|bash|sh|cmd|powershell)\b|\$\(|\$\{IFS\})', 'BLOCK'),
-
-
-    #SERVER-SIDE REQUEST FORGERY
-    (39, 'Block SSRF - Internal IP Ranges', 'REGEX_MATCH', 'QUERY_STRING', r'(?i)(?:169\.254\.169\.254|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(?:1[6-9]|2\d|3[01])\.\d+\.\d+|127\.0\.0\.\d+|localhost)', 'BLOCK'),
-    (40, 'Block SSRF - File/Dict Protocol', 'REGEX_MATCH', 'QUERY_STRING', r'(?i)(?:^|\b)(?:file|dict|gopher|ftp):\/\/', 'BLOCK')
-
+    (29, 'Block Null Bytes (query)', 'REGEX_MATCH', 'QUERY_STRING', r'%00', 'BLOCK')
+    
     
 ]
 

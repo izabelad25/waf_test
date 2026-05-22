@@ -1129,6 +1129,7 @@
     try {
       const res  = await fetch(`${WAF_BASE}/waf/rules`);
       const data = await res.json();
+      
       ALL_RULES  = data.rules || [];
     } catch(e) { ALL_RULES = []; }
     renderR(ALL_RULES);

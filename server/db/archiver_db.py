@@ -21,7 +21,7 @@ _BASE = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
 DB_PATH = os.path.join(os.path.dirname(_BASE), "fireball.db")
 ARCHIVE_DIR = os.path.dirname(DB_PATH)
 
-#constants 
+#constants (modificare necesara pt user sa poata ajusta parametrii)
 SIZE_THRESHOLD_MB = 200
 ARCHIVE_OLDER_THAN_DAYS = 7 #rows older than 7 days are achived automatically
 CHECK_INTERVAL_SECONDS = 300 #seconds == 5 mins 

@@ -43,7 +43,7 @@ async def analyzer():
 
         #specific attack types
         (
-            "Brute Force",
+            "Brute Force (slow)",
             """
             SELECT client_ip, COUNT(*) AS fail_count
             FROM activity_logs
@@ -56,6 +56,20 @@ async def analyzer():
             "brute_force_auth"
         ),
 
+         (
+            "Brute Force (automated)",
+            """
+            SELECT client_ip, COUNT(*) AS fail_count
+            FROM activity_logs
+            WHERE status_code IN (401, 403)
+            AND timestamp >= NOW() - INTERVAL '1 minutes'
+            GROUP BY client_ip
+            HAVING COUNT(*) >= 10
+            """,
+            lambda row: f"{row[1]} failed auth attempts in 1min",
+            "brute_force_auth"
+        ),
+
         (
             "Automated Scanning Detection",
             """
@@ -64,9 +78,9 @@ async def analyzer():
             WHERE status_code = 404
             AND timestamp >= NOW() - INTERVAL '1 minute'
             GROUP BY client_ip
-            HAVING COUNT(DISTINCT request_path) >= 15
+            HAVING COUNT(DISTINCT request_path) >= 10
             """,
-            lambda row: f"{row[1]} unique 404 paths in 1min (scanner)",
+            lambda row: f"{row[1]} unique 404 paths in 1min (scanner detected!!)",
             "path_enumeration_scan"
         ),
 
