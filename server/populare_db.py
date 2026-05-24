@@ -1,71 +1,90 @@
-"""
-populate_db.py
-Populeaza fireball.db cu datele din test set (activity_logs_synthetic_final.csv)
-Mapeaza coloanele CSV -> schema activity_logs din init_db.py:
-  record_id  -> log_id
-  timestamp  -> timestamp
-  client_ip  -> client_ip
-  field_a    -> http_method
-  field_b    -> request_path
-  field_c    -> status_code  (ALLOW=200, BLOCK=403)
-  field_d    -> user_agent
-  field_e    -> response_time_ms
+import os
+import time
+import pandas as pd
+import urllib.parse
+import http.client
+ 
 
-Ruleaza din directorul server/:  python populate_db.py
-"""
-
-import os, sys, duckdb, pandas as pd
-
-# ── Cai ──────────────────────────────────────────────────────────
-_BASE    = os.path.dirname(os.path.abspath(__file__))
-DB_PATH  = os.path.join(_BASE, "fireball.db")
-CSV_PATH = os.path.join(_BASE, "log_analyzer", "activity_logs_synthetic_final.csv")
-
-# ── Citire CSV ───────────────────────────────────────────────────
-df = pd.read_csv(CSV_PATH)
-test = df[df["dataset_split"] == "test"].copy().reset_index(drop=True)
-print(f"Randuri test set: {len(test)}")
-
-# ── Mapare status_code ───────────────────────────────────────────
-def to_status(v):
-    if str(v) == "BLOCK": return 403
-    if str(v) == "ALLOW":  return 200
-    try:   return int(float(v))
-    except: return 200
-
-test["status_code"]      = test["field_c"].apply(to_status)
-test["response_time_ms"] = pd.to_numeric(test["field_e"], errors="coerce").fillna(0.0)
-test["timestamp"]        = pd.to_datetime(test["timestamp"], errors="coerce")
-
-# ── Inserare in DB ───────────────────────────────────────────────
-conn = duckdb.connect(DB_PATH)
-
-rows = [
-    (
-        str(r["record_id"]),
-        r["timestamp"],
-        str(r["client_ip"]),
-        str(r["field_a"]),
-        str(r["field_b"]),
-        int(r["status_code"]),
-        str(r["field_d"]),
-        float(r["response_time_ms"]),
-    )
-    for _, r in test.iterrows()
-]
-
-conn.executemany(
-    """
-    INSERT OR IGNORE INTO activity_logs
-    (log_id, timestamp, client_ip, http_method,
-     request_path, status_code, user_agent, response_time_ms)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """,
-    rows
+PROXY_HOST  = "127.0.0.1"
+PROXY_PORT  = 8080          # portul proxy WAF 
+DELAY       = 0.05          # 50ms intre cereri (20 req/sec)
+SPLIT       = "test"
+CSV_PATH    = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "log_analyzer",
+    "activity_logs_synthetic_final.csv"
 )
+ 
 
-total = conn.execute("SELECT COUNT(*) FROM activity_logs").fetchone()[0]
-conn.close()
+METHODS_WITH_BODY = {"POST", "PUT", "PATCH"}
+ 
 
-print(f"Inserate: {len(rows)} randuri")
-print(f"Total in activity_logs: {total}")
+df   = pd.read_csv(CSV_PATH)
+rows = df[df["dataset_split"] == SPLIT].copy().reset_index(drop=True)
+total = len(rows)
+ 
+print(f"Fireball WAF — HTTP traffic simulator")
+print(f"Target : http://{PROXY_HOST}:{PROXY_PORT}")
+print(f"Rows   : {total} ({SPLIT} set)")
+print(f"Delay  : {DELAY}s per request  ({1/DELAY:.0f} req/sec)")
+print(f"{'─'*52}")
+ 
+ok = blocked = errors = 0
+ 
+for i, row in rows.iterrows():
+    method     = str(row["field_a"]).upper()
+    raw_path   = str(row["field_b"])
+    user_agent = str(row["field_d"])
+ 
+    
+    if "?" in raw_path:
+        path, qs = raw_path.split("?", 1)
+        url = f"{path}?{qs}"
+    else:
+        url = raw_path
+ 
+    headers = {
+        "User-Agent":   user_agent,
+        "X-Real-IP":    str(row["client_ip"]),
+        "Accept":       "*/*",
+        "Connection":   "close",
+    }
+ 
+    
+    body = None
+    if method in METHODS_WITH_BODY:
+        body = b""
+        headers["Content-Length"] = "0"
+ 
+    try:
+        conn = http.client.HTTPConnection(
+            PROXY_HOST, PROXY_PORT, timeout=5
+        )
+        conn.request(method, url, body=body, headers=headers)
+        resp = conn.getresponse()
+        resp.read()  
+        conn.close()
+ 
+        status = resp.status
+        if status == 403:
+            blocked += 1
+            marker = "[BLOCK]"
+        elif status >= 500:
+            errors += 1
+            marker = "[5xx]  "
+        else:
+            ok += 1
+            marker = "[OK]   "
+ 
+        idx = i + 1
+        print(f"  {marker} {idx:4d}/{total}  {method:6s}  {status}  {raw_path[:55]}")
+ 
+    except Exception as e:
+        errors += 1
+        print(f"  [ERR]   {i+1:4d}/{total}  {method:6s}  ERR  {raw_path[:40]} — {e}")
+ 
+    time.sleep(DELAY)
+ 
+print(f"{'─'*52}")
+print(f"Complet:  OK={ok}  BLOCK={blocked}  ERR={errors}  TOTAL={total}")
+ 

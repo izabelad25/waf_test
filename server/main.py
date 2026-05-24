@@ -13,6 +13,8 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware 
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
 
 #background services
 from db.logger import log_background_listener
@@ -32,12 +34,50 @@ from port_config import get_internal_port, is_port_free, print_instructions
 import sys
 
 
+
+
+#middleware w security policies
+class DashboardCSP(BaseHTTPMiddleware):
+   
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "connect-src 'self' http://127.0.0.1:8000; "
+            "img-src 'self' data:; "
+            "object-src 'none'; "
+            "base-uri 'self';"
+        )
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        return response
+ 
+ 
+class ProxyCSP(BaseHTTPMiddleware):
+   
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        
+        if response.status_code == 403:
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'none'; "
+                "frame-ancestors 'none';"
+            )
+            response.headers["X-Content-Type-Options"] = "nosniff"
+            response.headers["X-Frame-Options"] = "DENY"
+        return response
+
 #UI dashboard app  PORT 8000
 # !! proxy app on its separated port only
 
 dashboard_app = FastAPI(title="Firewall - Dashboard")
 
-#cors middleware 
+#cors middleware + CSP
+dashboard_app.add_middleware(DashboardCSP)
+
 dashboard_app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -61,6 +101,8 @@ async def load_dashboard():
 #handles the requests and runs the waf engine
 
 proxy_app = FastAPI(title="Fireball - proxy")
+
+proxy_app.add_middleware(ProxyCSP)
 
 proxy_app.add_middleware(
     CORSMiddleware,

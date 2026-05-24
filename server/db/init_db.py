@@ -137,14 +137,14 @@ default_rules = [
      r"keydown|keyup|keypress|input|select|dblclick|contextmenu|drag|drop|copy|"
      r"paste|cut|scroll|resize|abort|canplay|ended|pause|play|seeking|stalled|"
      r"suspend|volumechange|waiting|message|open|close|beforeunload|hashchange|"
-     r"popstate|storage|online|offline|animationstart|animationend|transitionend)\s*=)", 'BLOCK'),
+     r"popstate|storage|online|offline|animationstart|animationend|transitionend)\s*=", 'BLOCK'),
 
     (22, 'Block XSS Event Handlers (Body)', 'REGEX_MATCH', 'BODY', 
      r"(?i)\bon(?:error|load|click|mouseover|mouseout|focus|blur|change|submit|"
      r"keydown|keyup|keypress|input|select|dblclick|contextmenu|drag|drop|copy|"
      r"paste|cut|scroll|resize|abort|canplay|ended|pause|play|seeking|stalled|"
      r"suspend|volumechange|waiting|message|open|close|beforeunload|hashchange|"
-     r"popstate|storage|online|offline|animationstart|animationend|transitionend)\s*=)", 'BLOCK'),
+     r"popstate|storage|online|offline|animationstart|animationend|transitionend)\s*=", 'BLOCK'),
 
     (23, 'Block XSS Javascript URI', 'REGEX_MATCH', 'QUERY_STRING', 
      r"(?i)(?:javascript|vbscript)\s*:|data:(?:text/html|application/[a-z+]+|image/svg)", 'BLOCK'),
