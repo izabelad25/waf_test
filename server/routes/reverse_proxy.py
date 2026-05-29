@@ -12,7 +12,7 @@ import time
 
 from db.init_db import CACHE_IPS, CACHE_REGEX
 from db.logger import activity_logs_buffer, firewall_actions_buffer
-from server.db.sanitize_data import sanitize_ip, sanitize_path
+from db.sanitize_data import sanitize_ip, sanitize_path
 
 
 #proxy state from waf config

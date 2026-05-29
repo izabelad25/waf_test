@@ -6,7 +6,7 @@ from db.logger import firewall_actions_buffer
 from db.init_db import add_new_rule
 from .alert import sendMail
 
-from server.db.sanitize_data import sanitize_ip, sanitize_path
+from db.sanitize_data import sanitize_ip, sanitize_path
 
 def block_and_log(ip: str, trigger: str, reason: str, current_time):
         CACHE_IPS.add(ip)

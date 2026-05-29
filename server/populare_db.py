@@ -12,7 +12,8 @@ SPLIT       = "test"
 CSV_PATH    = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     "log_analyzer",
-    "activity_logs_synthetic_final.csv"
+    #trb modificat 
+    "activity_logs_synthetic_final2.csv"
 )
  
 

@@ -2,7 +2,7 @@ import duckdb
 import regex 
 import os
 import sys
-from server.db.sanitize_data import sanitize_ip, sanitize_path
+from db.sanitize_data import sanitize_ip, sanitize_path
 
 _BASE   = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
 DB_PATH = os.path.join(os.path.dirname(_BASE), "fireball.db")

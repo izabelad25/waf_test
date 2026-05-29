@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from db.init_db import db, CACHE_IPS, CACHE_REGEX, reload_cache
 from typing import Optional
 import regex
-from server.db.sanitize_data import sanitize_ip, sanitize_path
+from db.sanitize_data import sanitize_ip, sanitize_path
 
 rule_router = APIRouter()
 

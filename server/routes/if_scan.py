@@ -6,7 +6,7 @@ from db.init_db import add_new_rule
 from datetime import datetime
 import uuid
 
-from server.db.sanitize_data import sanitize_ip, sanitize_path
+from db.sanitize_data import sanitize_ip, sanitize_path
  
 if_scan_router = APIRouter()
  
