@@ -81,7 +81,7 @@ async def reverse_proxy(request: Request, path: str):
     # SECURITY CHECKS  (ordered fastest to slowest)
 
     #  Check 1 = blocked IP 
-    if client_ip in CACHE_IPS:
+    if sanitize_ip(client_ip) in CACHE_IPS:
         return await block_request(0, client_ip, "Blocked IP by FIREWALL rule")
 
     #  Check 2 = malicious PATH 

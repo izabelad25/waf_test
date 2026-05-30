@@ -7,7 +7,7 @@ def sanitize_ip(ip: str) -> str:
     """192.168.1.1 -> 192[.]168[.]1[.]1"""
     ip = CTRL_CHARACTERS.sub('', str(ip))
     return ip.replace('.', '[.]')[:64]
- 
+
 def sanitize_path(path: str) -> str:
     """
     /api/search?q=<script> -> /api/search?q=[<]script[>]

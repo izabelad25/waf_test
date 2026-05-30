@@ -24,6 +24,7 @@ _TRAIN_URL_FREQ = _mod.url_freq_map
 
 _TRAIN_UA_FREQ = _mod.ua_freq_map
 
+_CAT_COLS = _mod.categorical_cols
 _VALID_NUM = _mod.valid_numeric_cols
 
 def run_scan(db) -> dict:
@@ -46,23 +47,25 @@ def run_scan(db) -> dict:
         "request_path", "status_code", "user_agent", "response_time_ms"
     ])
  
-    df["timestamp"]        = pd.to_datetime(df["timestamp"], errors="coerce")
-    df["response_time_ms"] = pd.to_numeric(df["response_time_ms"], errors="coerce").fillna(0)
-    df["status_code"]      = pd.to_numeric(df["status_code"], errors="coerce").fillna(200).astype(int)
+    #df["timestamp"]        = pd.to_datetime(df["timestamp"], errors="coerce")
+    #df = df.rename(columns={"response_time_ms": "field_e"})  
+    #df["status_code"]      = pd.to_numeric(df["status_code"], errors="coerce").fillna(200).astype(int)
     df["request_path"]     = df["request_path"].fillna("/").astype(str)
-    df["user_agent"]       = df["user_agent"].fillna("").astype(str)
-    df["client_ip"]        = df["client_ip"].fillna("").astype(str)
-    df = df.dropna(subset=["request_path", "user_agent", "response_time_ms"]).reset_index(drop=True)
+    df["user_agent"]       = df["user_agent"].fillna(" ").astype(str)
+    df["client_ip"]        = df["client_ip"].fillna(" ").astype(str)
+   
  
     #redenumire coloane
     df = df.rename(columns={
+        "http_method": "field_a",
         "request_path":     "field_b",
+        
         "user_agent":       "field_d",
         "response_time_ms": "field_e",
     })
 
-    df["field_c"] = df["status_code"].apply(lambda s: "BLOCK" if int(s) == 403 else "ALLOW")
-    df["is_blocked"] = (df["status_code"] == 403).astype(int)
+    df["field_c"] = np.where(df["status_code"].isin([401, 403]), "BLOCK", "ALLOW")
+    df["is_blocked"] = df["status_code"].isin([401, 403]).astype(int)
  
     #adaugare features
     df = _mod.add_features(
@@ -73,7 +76,7 @@ def run_scan(db) -> dict:
     )
  
     # ohe si fit transform antrenate din model
-    cat_cols = ["field_b", "field_d"]
+    cat_cols = _CAT_COLS
     enc_arr  = _OHE.transform(df[cat_cols])
     enc_df   = pd.DataFrame(enc_arr, columns=_OHE.get_feature_names_out(cat_cols), index=df.index)
     num_df   = pd.DataFrame(_SCALER.transform(df[_VALID_NUM].fillna(0)), columns=_VALID_NUM, index=df.index)
@@ -109,7 +112,7 @@ def run_scan(db) -> dict:
             "log_id":           str(r["log_id"]),
             "timestamp":        r["timestamp"].isoformat() if pd.notna(r["timestamp"]) else None,
             "client_ip":        str(r["client_ip"]),
-            "http_method":      str(r["http_method"]),
+            "http_method":      str(r["field_a"]),
             "request_path":     str(r["field_b"]),
             "status_code":      int(r["status_code"]),
             "user_agent":       str(r["field_d"]),

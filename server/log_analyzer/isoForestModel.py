@@ -120,7 +120,7 @@ data_test = add_features(
 print(data_train.head())
 
 #normalizarea datelor pt model
-categorical_cols = ['client_ip', 'field_b', 'field_c', 'field_d', ]
+categorical_cols = ['client_ip', 'field_b', 'field_c', 'field_d' ]
 numeric_cols     = [
     'field_e',                 # response time 
     'url_length',               # lungime URL

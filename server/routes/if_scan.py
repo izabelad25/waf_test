@@ -38,7 +38,7 @@ async def block_ip_from_scan(client_ip: str):
         reason       = f"Blocked by IF anomaly scanner"
  
         new_rule_id = add_new_rule(
-            f"IF Scanner block {client_ip}",
+            f"Scanner block {client_ip}",
             "IP_MATCH", "IP", client_ip, action="BLOCK"
         )
  
