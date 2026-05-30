@@ -11,17 +11,64 @@ from sklearn.metrics import precision_score, recall_score, f1_score, confusion_m
 
 #indicators of compromise (utilizati si in regulile statice pt imbunatatirea detectiei) format sanitizat ca in BD
 IOC = [
-     "union [select]", "or 1[=]1", "sleep[(]", "xp_cmd",
-    "[<]script", "onerror[=]", "onload[=]", "[.].[.]/",
-    "etc/passwd", "etc/shadow", ".env", "shell_exec",
-    "sqlmap", "nikto", "nmap", "wget", "python-urllib", "curl/"
+     # --- SQL injection ---
+    "[union] [select]",      # union+select bracketed (forma sanitizata)
+    "or 1[=]1",              # boolean tautology
+    "'1'[=]'1",              # boolean tautology cu quote
+    "admin'--",              # auth bypass cu commentariu SQL
+    "admin' or",             # auth bypass varianta
+    "'/*",                   # commentariu SQL bypass
+    "sleep[(]",              # time-based MySQL/PostgreSQL
+    "benchmark[(]",          # time-based MySQL
+    "waitfor delay",         # time-based MSSQL
+    "extractvalue[(]",       # error-based MySQL
+    "updatexml[(]",          # error-based MySQL
+    "substring[(]",          # blind SQL injection
+    "drop table",            # destructiv
+    "xp_cmdshell",           # MSSQL OS command exec
+    "information_schema",    # enumerare metadata
+    "mysql.user",            # enumerare credentiale
+    # --- XSS ---
+    "[<]script",
+    "[<]img",
+    "[<]svg",
+    "[<]iframe",
+    "[<]body",
+    "[<]details",
+    "onerror[=]",
+    "onload[=]",
+    "ontoggle[=]",
+    "javascript:",
+    "document.cookie",
+    "alert[(]",
+    # --- Path traversal & LFI ---
+    "../",                   # POSIX traversal
+    "..\\",                  # Windows traversal
+    "%2e%2e",                # URL-encoded ..
+    "%2f..",                 # URL-encoded /..
+    "%252f",                 # double-encoded /
+    "etc/passwd",
+    "etc/shadow",
+    "etc/hosts",
+    ".env",
+    "windows/system32",
+    "config/database",
+    # --- Command injection ---
+    "shell_exec",
+    "|whoami",
+    ";wget",
+    ";curl",
+    "$[(]id[)]",
+    # --- Scanner / programmatic UAs (inactive pe acest dataset, utile pe live) ---
+    "sqlmap", "nikto", "nmap", "wget/", "python-urllib", "curl/",
+    "acunetix", "burp"
 ]
 
 import os
 
-data = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'activity_logs_synthetic_final_final.csv'))
+data = pd.read_csv(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'activity_logs_bun_diversified.csv'))
 
-relevant = (data[['field_b', 'field_d', 'field_e']]
+relevant = (data[['timestamp', 'client_ip', 'field_a' ,'field_b', 'field_c', 'field_d', 'field_e']]
             .dropna(subset=['field_b', 'field_d', 'field_e'])
             .reset_index(drop=False))
 check = data['is_anomaly']
@@ -58,6 +105,9 @@ def add_features(df, url_freq_map, ua_freq_map):
 
 url_freq_map = data_train['field_b'].value_counts()
 ua_freq_map  = data_train['field_d'].value_counts()
+
+
+
 #aplicarea pe train si test
 data_train = add_features(
     data_train, url_freq_map, ua_freq_map
@@ -67,8 +117,10 @@ data_test = add_features(
     data_test, url_freq_map, ua_freq_map
 )
 
+print(data_train.head())
+
 #normalizarea datelor pt model
-categorical_cols = ['field_b', 'field_d']
+categorical_cols = ['client_ip', 'field_b', 'field_c', 'field_d', ]
 numeric_cols     = [
     'field_e',                 # response time 
     'url_length',               # lungime URL
@@ -76,7 +128,8 @@ numeric_cols     = [
     'ua_length',
     'ua_freq',                     
     'ioc_count',               # nr indicatori de compromitere
-    'has_ioc',                 # binar: exista IoC
+    'has_ioc' # binar: exista IoC
+         
 ]
 
 #sunt selectate doar coloanele num valide // cele binare nu
@@ -109,7 +162,8 @@ df_test_final  = pd.concat([df_cat_test,  df_num_test],  axis=1)
 iso_forest = IsolationForest(
     n_estimators=100,
     contamination=0.03,                                     
-    max_samples=max(256, int(len(df_train_final) * 0.25)),  
+    max_samples=256,
+    max_features=0.9,
     random_state=42,
 )
 iso_forest.fit(df_train_final)

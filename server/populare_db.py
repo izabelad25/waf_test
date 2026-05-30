@@ -8,12 +8,12 @@ import http.client
 PROXY_HOST  = "127.0.0.1"
 PROXY_PORT  = 8080          # portul proxy WAF 
 DELAY       = 0.05          # 50ms intre cereri (20 req/sec)
-SPLIT       = "test"
+
 CSV_PATH    = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
     "log_analyzer",
     #trb modificat 
-    "activity_logs_synthetic_final2.csv"
+    "activity_logs_synthetic_final_final.csv"
 )
  
 
@@ -21,12 +21,12 @@ METHODS_WITH_BODY = {"POST", "PUT", "PATCH"}
  
 
 df   = pd.read_csv(CSV_PATH)
-rows = df[df["dataset_split"] == SPLIT].copy().reset_index(drop=True)
+rows = df.sample(frac=0.10, random_state=42).reset_index(drop=True)
 total = len(rows)
  
 print(f"Fireball WAF — HTTP traffic simulator")
 print(f"Target : http://{PROXY_HOST}:{PROXY_PORT}")
-print(f"Rows   : {total} ({SPLIT} set)")
+print(f"Rows   : {total} (test set)")
 print(f"Delay  : {DELAY}s per request  ({1/DELAY:.0f} req/sec)")
 print(f"{'─'*52}")
  

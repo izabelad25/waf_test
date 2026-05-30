@@ -14,25 +14,17 @@ _mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(_mod)
 
 #obiectele antrenate pe train set
-_ISO    = _mod.iso_forest
-_OHE    = _mod.ohe
+_ISO = _mod.iso_forest
+_OHE = _mod.ohe
 _SCALER = _mod.scaler
 
 #statisticile pe care e antrenat
-_TRAIN_PATH_Q3        = _mod.train_path_q3
-_TRAIN_PATH_IQR       = _mod.train_path_iqr
-_TRAIN_RT_Q3          = _mod.train_rt_q3
-_TRAIN_RT_IQR         = _mod.train_rt_iqr
-_TRAIN_URL_FREQ       = _mod.train_url_freq
-_TRAIN_URL_FREQ_Q1    = _mod.train_url_freq_q1
-_TRAIN_UA_FREQ        = _mod.train_ua_freq
-_TRAIN_UA_FREQ_Q1     = _mod.train_ua_freq_q1
-_TRAIN_URL_LEN_Q3     = _mod.train_url_len_q3
-_TRAIN_URL_LEN_IQR    = _mod.train_url_len_iqr
-_TRAIN_IP_UNIQ_PATHS  = _mod.train_ip_uniq_paths
-_TRAIN_IP_UNIQ_Q3     = _mod.train_ip_uniq_q3
-_TRAIN_IP_UNIQ_IQR    = _mod.train_ip_uniq_iqr
-_VALID_NUM            = _mod.valid_numeric_cols
+
+_TRAIN_URL_FREQ = _mod.url_freq_map
+
+_TRAIN_UA_FREQ = _mod.ua_freq_map
+
+_VALID_NUM = _mod.valid_numeric_cols
 
 def run_scan(db) -> dict:
    #preia datele din db si ruleaza modelul pe date
@@ -42,11 +34,11 @@ def run_scan(db) -> dict:
                request_path, status_code, user_agent, response_time_ms
         FROM activity_logs
         ORDER BY timestamp DESC
-        LIMIT 5000
+        LIMIT 2000
         """
     ).fetchall()
  
-    if len(rows) < 50:
+    if len(rows) < 20:
         return {"error": "not_enough_data", "count": len(rows)}
  
     df = pd.DataFrame(rows, columns=[
@@ -70,16 +62,14 @@ def run_scan(db) -> dict:
     })
 
     df["field_c"] = df["status_code"].apply(lambda s: "BLOCK" if int(s) == 403 else "ALLOW")
+    df["is_blocked"] = (df["status_code"] == 403).astype(int)
  
     #adaugare features
     df = _mod.add_features(
         df,
-        _TRAIN_PATH_Q3,  _TRAIN_PATH_IQR,
-        _TRAIN_RT_Q3,    _TRAIN_RT_IQR,
-        _TRAIN_URL_FREQ, _TRAIN_URL_FREQ_Q1,
-        _TRAIN_UA_FREQ,  _TRAIN_UA_FREQ_Q1,
-        _TRAIN_URL_LEN_Q3, _TRAIN_URL_LEN_IQR,
-        _TRAIN_IP_UNIQ_PATHS, _TRAIN_IP_UNIQ_Q3, _TRAIN_IP_UNIQ_IQR,
+        _TRAIN_URL_FREQ, 
+        _TRAIN_UA_FREQ
+      
     )
  
     # ohe si fit transform antrenate din model
