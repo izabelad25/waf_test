@@ -359,15 +359,6 @@ textarea{resize:vertical;min-height:52px}
     <span id="scan-status" style="font-size:10px;color:var(--txt3)"> </span>
     <span id="scan-badge" style="display:none;font-size:9px;padding:0 8px;border:1px solid var(--red);color:var(--red)"></span>
   </div>
-  <div class="box" id="scatter-card" style="display:none;margin-bottom:8px">
-    <div class="box-title">anomaly score / response time -> normal vs anomaly</div>
-    <pre class="sc-plot" id="scatter-ascii"></pre>
-    <div style="display:flex;gap:14px;margin-top:5px;font-size:9px;color:var(--txt3)">
-      <span class="sc-n" style="font-weight:700">&middot;</span> Normal &nbsp;
-      <span class="sc-a" style="font-weight:700">&#10005;</span> Anomaly &nbsp;
-      <span style="margin-left:auto">X = IF score / Y = RT ms / line = threshold </span>
-    </div>
-  </div>
   <div class="box" id="anomaly-list-card" style="display:none;padding:0">
     <div style="padding:7px 9px;border-bottom:1px solid var(--br);display:flex;align-items:center;gap:8px">
       <span style="font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.7px">Anomalies detected</span>
@@ -376,9 +367,9 @@ textarea{resize:vertical;min-height:52px}
     </div>
     <div id="no-anomalies-msg" style="display:none;padding:14px;text-align:center;color:var(--txt3);font-size:10px">No anomalies detected.</div>
     <div style="overflow-x:auto">
-      <table style="table-layout:fixed;min-width:640px">
+      <table style="table-layout:fixed;min-width:664px">
         <colgroup>
-          <col style="width:64px"><col style="width:100px"><col style="width:32px"><col>
+          <col style="width:64px"><col style="width:100px"><col style="width:56px"><col>
           <col style="width:46px"><col style="width:54px"><col style="width:30px"><col style="width:64px"><col style="width:72px">
         </colgroup>
         <thead><tr><th>Time</th><th>IP</th><th>Method</th><th>Path</th><th>Status</th><th>RT ms</th><th>IoC</th><th>IF Score</th><th>Block</th></tr></thead>
@@ -390,7 +381,7 @@ textarea{resize:vertical;min-height:52px}
 
 <!-- INFO -->
 <div class="view" id="view-info">
-  <div class="ph">About Fireball</div>
+  <div class="ph">About Firewall</div>
   <div class="ps">system info / architecture</div>
   <div class="info-grid">
     <div class="ascii-panel">
@@ -408,7 +399,7 @@ textarea{resize:vertical;min-height:52px}
       |  ( ) |     /    |_______|
       |___|__|    /
            \_____/</pre>
-      <div class="ascii-title">FIREBALL WAF</div>
+      <div class="ascii-title">FIREWALL</div>
       
     </div>
     <div class="info-right">
@@ -855,91 +846,12 @@ async function startScan(){
     const n=data.anomalies_found||0;
     status.textContent=`Complete scan !! \u2014 ${(data.total_scanned||0).toLocaleString()} analyzed HTTP requests`;
     badge.style.display='inline';badge.textContent=`${n} anomalies`;
-    renderScatter(data.scatter_points||[]);
-    document.getElementById('scatter-card').style.display='block';
     renderAnomalies(data.anomalies||[]);
     document.getElementById('anomaly-list-card').style.display='block';
   }catch{status.textContent='Network error -> check if the backend is active';}
   btn.disabled=false;btn.textContent='Scan for anomalies';
 }
 
-// ASCII scatter plot — drawn directly on the UI with monospace glyphs
-function renderScatter(pts){
-  const host=document.getElementById('scatter-ascii');
-  if(!host)return;
-  if(!pts.length){host.innerHTML='<span class="sc-ax">no data</span>';return;}
-
-  const W=58, H=15;                 // plot area in character cells
-  const LBL=6;                      // width reserved for Y-axis labels
-
-  // X range: centred on 0 with symmetric margins so extreme outliers
-  // don't stretch the plot
-  const xs=pts.map(p=>p.x);
-  const xSpread=Math.max(Math.abs(Math.min(...xs)),Math.abs(Math.max(...xs)),0.08)*1.2;
-  const xMin=-xSpread, xMax=xSpread;
-
-  // Y range: response time, ignoring extreme outliers (>p95)
-  const ys=pts.map(p=>p.y).filter(v=>v>0).sort((a,b)=>a-b);
-  const yMax=(ys[Math.floor(ys.length*.95)]||Math.max(...pts.map(p=>p.y)))*1.1||400;
-
-  const cx=v=>Math.round((Math.max(xMin,Math.min(xMax,v))-xMin)/(xMax-xMin)*(W-1));
-  const cy=v=>Math.round((1-Math.min(v,yMax)/yMax)*(H-1));
-
-  // grid of cells, each {ch,cls}
-  const grid=Array.from({length:H},()=>Array(W).fill(null));
-
-  // threshold line at IF score = 0
-  const thCol=cx(0);
-  for(let r=0;r<H;r++)grid[r][thCol]={ch:'\u2502',cls:'sc-th'};
-
-  // normal points first (don't overwrite anomalies)
-  pts.filter(p=>!p.anomaly).forEach(p=>{
-    const r=cy(p.y),c=cx(p.x),cell=grid[r][c];
-    if(!cell||cell.cls==='sc-th')grid[r][c]={ch:'\u00b7',cls:'sc-n'};
-  });
-  // anomalies on top
-  pts.filter(p=>p.anomaly).forEach(p=>{
-    grid[cy(p.y)][cx(p.x)]={ch:'\u2715',cls:'sc-a'};
-  });
-
-  // Y-axis tick rows -> label values
-  const yLabel={};
-  for(let i=0;i<=4;i++){
-    const r=Math.round(i/4*(H-1));
-    yLabel[r]=String(Math.round(yMax*(1-i/4)));
-  }
-
-  const cell=g=>g?`<span class="${g.cls}">${g.ch}</span>`:' ';
-  let out='';
-  for(let r=0;r<H;r++){
-    const lbl=(yLabel[r]||'').padStart(LBL-1)+' ';
-    out+=`<span class="sc-ax">${lbl}\u2524</span>`;
-    for(let c=0;c<W;c++)out+=cell(grid[r][c]);
-    out+='\n';
-  }
-  // bottom axis
-  let axis='';
-  for(let c=0;c<W;c++)axis+=(c===thCol?'\u252c':'\u2500');
-  out+=`<span class="sc-ax">${' '.repeat(LBL)}\u2514${axis}</span>\n`;
-  // X-axis labels
-  let xrow=Array(LBL+1+W).fill(' ');
-  const putX=(v,txt)=>{
-    const pos=LBL+1+cx(v)-Math.floor(txt.length/2);
-    for(let i=0;i<txt.length;i++){const p=pos+i;if(p>=0&&p<xrow.length)xrow[p]=txt[i];}
-  };
-  putX(xMin,xMin.toFixed(2));
-  putX(0,'0');
-  putX(xMax,xMax.toFixed(2));
-  out+=`<span class="sc-ax">${xrow.join('')}</span>`;
-  // 'Th' marker under threshold line
-  let thRow=Array(LBL+1+W).fill(' ');
-  const thPos=LBL+1+thCol-1;
-  'Th'.split('').forEach((ch,i)=>{const p=thPos+i;if(p>=0&&p<thRow.length)thRow[p]=ch;});
-  out+='\n<span class="sc-ax">'+thRow.join('')+'</span>';
-
-  host.innerHTML=out;
-}
- 
 function esc(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }

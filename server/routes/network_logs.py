@@ -48,12 +48,13 @@ async def get_log_stats():
         " LIMIT 3"
     ).fetchall()
 
-    #attack types == grupare a actiunilor de blocare dupa trigger
+    #attack types == grupare a blocarilor dupa NUMELE regulii
     attack_types = db.execute(
-        "SELECT trigger, COUNT(*) as cnt "
-        " FROM firewall_actions "
-        " WHERE action_taken = 'BLOCK' AND trigger IS NOT NULL "
-        " GROUP BY trigger "
+        "SELECT r.name, COUNT(*) as cnt "
+        " FROM firewall_actions fa "
+        " LEFT JOIN rules r ON fa.rule_id = r.rule_id "
+        " WHERE fa.action_taken = 'BLOCK' AND r.name IS NOT NULL "
+        " GROUP BY r.name "
         " ORDER BY cnt DESC "
         " LIMIT 6"
     ).fetchall()
