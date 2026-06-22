@@ -7,10 +7,10 @@ from db.sanitize_data import sanitize_ip, sanitize_path
 
 rule_router = APIRouter()
 
-#default rules IDs (19 lipseste)
+#default rules IDs
 DEFAULT_RULE_IDS: frozenset[int] = frozenset([
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-    11, 12, 13, 14, 15, 16, 17, 18,
+    11, 12, 13, 14, 15, 16, 17, 18, 19,
     20, 21, 22, 23, 24, 25, 26, 27, 28, 29
 ])
 

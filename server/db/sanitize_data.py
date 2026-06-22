@@ -1,7 +1,7 @@
 import regex
 
-
 CTRL_CHARACTERS = regex.compile(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]')
+KEYWORDS_SQL = regex.compile(r'(?i)\b(SELECT|UNION|DROP|DELETE|INSERT|WHERE|TRUNCATE|EXEC|UPDATE|OR)\b')
  
 def sanitize_ip(ip: str) -> str:
     """192.168.1.1 -> 192[.]168[.]1[.]1"""
@@ -20,7 +20,5 @@ def sanitize_path(path: str) -> str:
     path = path.replace('<', '[<]').replace('>', '[>]')
     path = path.replace('(', '[(]').replace(')', '[)]')
     path = path.replace('=', '[=]')
-    path = path.replace('SELECT', '[SELECT]').replace('UNION', '[UNION]').replace('DROP', '[DROP]')
-    path = path.replace('DELETE', '[DELETE]').replace('OR', '[OR]').replace('INSERT', '[INSERT]').replace('WHERE', '[WHERE]')
-    path = path.replace('TRUNCATE', '[TRUNCATE]').replace('EXEC', '[EXEC]').replace('UPDATE', '[UPDATE]')
+    path = KEYWORDS_SQL.sub(r'[\1]', path)
     return path[:1024]

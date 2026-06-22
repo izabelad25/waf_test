@@ -7,11 +7,9 @@ from db.sanitize_data import sanitize_ip, sanitize_path
 _BASE   = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
 DB_PATH = os.path.join(os.path.dirname(_BASE), "fireball.db")
 
-
-print("Initializing DuckBD...")
+print("Initializing WAF database -> DuckBD...")
 
 db = duckdb.connect(DB_PATH)
-
 
 db.execute("""
     CREATE TABLE IF NOT EXISTS rules (
@@ -26,7 +24,6 @@ db.execute("""
     )
 """)
 
-
 db.execute("""
     CREATE TABLE IF NOT EXISTS activity_logs (
         log_id VARCHAR PRIMARY KEY,     
@@ -40,7 +37,6 @@ db.execute("""
     )
 """)
 
-
 db.execute("""
     CREATE TABLE IF NOT EXISTS firewall_actions (
         action_id VARCHAR PRIMARY KEY,
@@ -53,7 +49,6 @@ db.execute("""
 """)
 
 #DEFAULT RULES 
-
 default_rules = [
     #Path traversal 
     (1, 'Block DIRECTORY Traversal', 'REGEX_MATCH', 'PATH', 
@@ -76,7 +71,6 @@ default_rules = [
      r'(?i)(?:^|/)(?:\.env|etc/(?:passwd|shadow|group|hosts|mysql)|windows/win\.ini|proc/self/environ|run/secrets/kubernetes)', 
      'BLOCK'),
     
-    
     (7, 'Block DIRECTORY Absolute Traversal (Windows) (query)', 'REGEX_MATCH', 'QUERY_STRING', 
      r'(?i)(?:c:[/\\](?:windows|inetpub|sysprep|system32)|\\\\(?:localhost|[\w.-]+)\\[a-z$])', 'BLOCK'),
     
@@ -90,10 +84,7 @@ default_rules = [
     (10, 'Block DIRECTORY Absolute Traversal (Windows) (Headers)', 'REGEX_MATCH', 'HEADERS', 
      r'(?i)(?:c:[/\\](?:windows|inetpub|sysprep|system32)|\\\\(?:localhost|[\w.-]+)\\[a-z$])', 'BLOCK'),
    
-    
-    
     #SQL injection rules
-
     (11, 'Block SQLi Auth Bypass', 'REGEX_MATCH', 'QUERY_STRING', 
      r"(?i)(?:'\s*(?:or|and)\s*'?\w|'\s*(?:or|and)\s*'[^']*'='|--(?:\s|$)|;\s*--)", 'BLOCK'),
     
@@ -120,7 +111,7 @@ default_rules = [
      r"(?i)\b(?:select|insert|update|delete|drop|truncate|exec(?:ute)?|"
      r"xp_|sp_|information_schema|sysobjects|syscolumns|waitfor[\s+]delay|"
      r"benchmark\s*\(|sleep\s*\()\b", 'LOG'),
-    
+    ##########
     
     (18, 'Block SQLi in Headers', 'REGEX_MATCH', 'HEADERS', 
      r"(?i)(?:union[\s\/\*]+select|'\s*(?:or|and)\s*'|--[^\r\n]*|/\*.*?\*/|waitfor[\s+]delay|benchmark\s*\()", 
@@ -169,11 +160,9 @@ default_rules = [
      r'(?i)(?:[;&|`$]\s*(?:cat|ls|id|whoami|curl|wget|bash|sh|cmd|powershell)\b|\$\(|\$\{IFS\})', 'BLOCK'),
 
     #null byte injection
-
     (28, 'Block Null Bytes (path)', 'REGEX_MATCH', 'PATH', r'%00', 'BLOCK'),
 
     (29, 'Block Null Bytes (query)', 'REGEX_MATCH', 'QUERY_STRING', r'%00', 'BLOCK')
-    
     
 ]
 
@@ -181,15 +170,14 @@ for rule in default_rules:
     db.execute(
         "INSERT OR REPLACE INTO rules "
         "(rule_id, name, rule_type, target_zone, match_pattern, action, is_active, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, TRUE, CURRENT_TIMESTAMP)",
+        "VALUES (?, ?, ?, ?, ?, ?, TRUE, CURRENT_TIMESTAMP) " 
+        "ON CONFLICT (rule_id) DO NOTHING",
         rule
     )
  
 print("WAF rules inserted.")
 
-
 # IN-MEMORY CACHE
-
 # O(1) set for blocked IP addresses
 CACHE_IPS: set = set()
  
@@ -201,12 +189,9 @@ CACHE_REGEX: dict = {
     'BODY': [],
 }
  
- 
 def reload_cache():
     global CACHE_IPS, CACHE_REGEX
- 
-    print("Loading rules into memory...")
- 
+    
     CACHE_IPS.clear()
     for key in CACHE_REGEX:
         CACHE_REGEX[key].clear()
@@ -224,7 +209,7 @@ def reload_cache():
  
         elif r_type == 'REGEX_MATCH':
             if target_zone not in CACHE_REGEX:
-                print(f"  [WARNING]  Rule {r_id} has unknown target_zone '{target_zone}' => skipped")
+                print(f"  !WARNING!  Rule {r_id} has unknown target_zone '{target_zone}' => skipped")
                 continue
             try:
                 compiled = regex.compile(pattern)
@@ -234,11 +219,13 @@ def reload_cache():
                     'action':  action,
                 })
             except Exception as e:
-                print(f"  [ERROR!]   Failed to compile regex for rule {r_id}: {e}")
+                print(f"  !ERROR!  Failed to compile regex for rule {r_id}: {e}")
  
     ip_count = len(CACHE_IPS)
     regex_count = sum(len(v) for v in CACHE_REGEX.values())
-    print(f"  [SUCCESS]   Loaded {ip_count} IP rules and {regex_count} REGEX rules into memory.")
+
+    print(f"  !SUCCESS!   Loaded {ip_count} IP rules and {regex_count} REGEX rules into memory.")
+    
     for zone, rules in CACHE_REGEX.items():
         print(f"  {zone}: {len(rules)} rules")
  
@@ -247,13 +234,15 @@ reload_cache()
 
 #operations for analyzer
 def add_new_rule(name: str, rule_type: str, target_zone: str, match_pattern: str, action: str = 'BLOCK'):
+
     valid_zones = {'PATH', 'BODY', 'QUERY_STRING', 'HEADERS', 'IP'}
+
     if target_zone not in valid_zones and rule_type != 'IP_MATCH':
         print(f"Invalid rule insertion == cancelled")
+        return None
     
     try:
         cursor = db.cursor()
-
         #max id
         cursor.execute("SELECT MAX(rule_id) FROM rules")
         result = cursor.fetchone()[0]
@@ -268,13 +257,15 @@ def add_new_rule(name: str, rule_type: str, target_zone: str, match_pattern: str
             (next_id, name, rule_type, target_zone, match_pattern, action)
         )
         
-        print(f"[SUCCES] added rule '{name}' with ID {next_id}")
+        print(f"!SUCCES! added rule '{name}' with ID {next_id}")
 
         reload_cache()
 
         return next_id
+    
     except Exception as e:
-        print(f" [ERR] to add rule: {e}")
+        print(f" !ERROR! in add rule: {e}")
         return None
+    
     finally:
         cursor.close()

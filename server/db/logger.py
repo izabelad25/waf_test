@@ -1,5 +1,3 @@
-
-#my version
 import asyncio
 from datetime import datetime
 from db.init_db import db

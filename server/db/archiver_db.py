@@ -21,7 +21,7 @@ _BASE = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
 DB_PATH = os.path.join(os.path.dirname(_BASE), "fireball.db")
 ARCHIVE_DIR = os.path.dirname(DB_PATH)
 
-#constants (modificare necesara pt user sa poata ajusta parametrii)
+#constants 
 SIZE_THRESHOLD_MB = 200
 ARCHIVE_OLDER_THAN_DAYS = 7 #rows older than 7 days are achived automatically
 CHECK_INTERVAL_SECONDS = 300 #seconds == 5 mins 
@@ -130,7 +130,7 @@ def build_archive(cutoff: datetime, archive_file: str)-> dict:
                     os.remove(archive_file)
                 except OSError:
                     pass
-            raise
+            raise 
 
         #4= checkpoint==vacuum 
         conn.execute("CHECKPOINT")
@@ -148,13 +148,13 @@ def build_archive(cutoff: datetime, archive_file: str)-> dict:
         }
     
     except Exception as e:
-        #if parquet file fails it rollsback the data it archived
+        #if parquet file fails it rolls back the data it archived
         if os.path.exists(archive_file):
             try:
                 os.remove(archive_file)
             except OSError:
                 pass
-            raise e
+        raise e
     
     finally:
         conn.close()
@@ -173,10 +173,13 @@ async def archiver():
         await asyncio.sleep(CHECK_INTERVAL_SECONDS)
         try:
             size_mb = db_size_mb()
+
             if size_mb < SIZE_THRESHOLD_MB:
                 print(f"DB size = {size_mb:.1f} MB  (threshold {SIZE_THRESHOLD_MB} MB) = no action needed")
                 continue
+
             print(f"DB size = {size_mb:.1f} MB = threshold exceeded, starting archive run...")
+            
             stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             archive_file = archive_path(stamp)
             cutoff = datetime.now()-timedelta(days=ARCHIVE_OLDER_THAN_DAYS)
