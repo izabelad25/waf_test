@@ -1,29 +1,32 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, Query
 from db.init_db import db
 
 waf_actions_router = APIRouter()
 
 @waf_actions_router.get("/waf/actions")
-async def get_firewall_actions(limit: int= 50, offset: int=0):
+async def get_firewall_actions( limit: int = Query(default=50, ge=1, le=500),
+                                offset: int = Query(default=0, ge=0)):
     #fetches every action the fw executed
     #left join to combine action, rule (name + pattern + type) and the request log
-    query = "SELECT" \
-    " fa.action_id," \
-    " fa.timestamp," \
-    " fa.action_taken," \
-    " fa.trigger," \
-    " fa.rule_id," \
-    " r.name AS rule_name," \
-    " fa.activity_log_id," \
-    " al.client_ip," \
-    " al.request_path," \
-    " r.match_pattern," \
-    " r.rule_type" \
-    " FROM firewall_actions fa" \
-    " LEFT JOIN rules r ON fa.rule_id = r.rule_id" \
-    " LEFT JOIN activity_logs al ON fa.activity_log_id = al.log_id" \
-    " ORDER BY fa.timestamp DESC" \
-    " LIMIT ? OFFSET ?"
+    query = """
+                    SELECT
+                        fa.action_id,
+                        fa.timestamp,
+                        fa.action_taken,
+                        fa.trigger,
+                        fa.rule_id,
+                        r.name AS rule_name,
+                        fa.activity_log_id,
+                        al.client_ip,
+                        al.request_path,
+                        r.match_pattern,
+                        r.rule_type
+                    FROM firewall_actions fa
+                    LEFT JOIN rules r ON fa.rule_id = r.rule_id
+                    LEFT JOIN activity_logs al ON fa.activity_log_id = al.log_id
+                    ORDER BY fa.timestamp DESC
+                    LIMIT ? OFFSET ?
+            """
 
     rows = db.execute(query, (limit, offset)).fetchall()
 
@@ -85,7 +88,7 @@ async def get_action_by_id(action_id: str):
     row = db.execute(query, (action_id,)).fetchone()
 
     if not row:
-        return {"error": "Action ID not found"}, 404
+        raise HTTPException(status_code=404, detail="Action ID not found")
 
     client_ip     = row[7]
     rule_type     = row[6]

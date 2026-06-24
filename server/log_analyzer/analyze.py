@@ -8,23 +8,26 @@ from .alert import sendMail
 
 from db.sanitize_data import sanitize_ip, sanitize_path
 
-def block_and_log(ip: str, trigger: str, reason: str, current_time) -> bool:
+def block_and_log(client_ip: str, trigger: str, reason: str, current_time) -> bool:
         #returneaza TRUE = blocare reusita // FALSE = blocare esuata
+        sanitized_ip = sanitize_ip(client_ip)
+        if sanitized_ip in CACHE_IPS:
+             return False
         
-        new_rule_id = add_new_rule("Analyzer " + sanitize_path(reason), "IP_MATCH", "IP", ip, action='BLOCK')
+        new_rule_id = add_new_rule(f"Analyzer vlocked {sanitized_ip}", "IP_MATCH", "IP", sanitized_ip, action='BLOCK')
 
         if new_rule_id is None:
              print(f"ERROR ! in adding new block ip rule")
              return False
         #actualizare cache
-        CACHE_IPS.add(ip)
+        CACHE_IPS.add(sanitized_ip)
 
         firewall_actions_buffer.append((
-            str(uuid.uuid4()), current_time, None,
+            str(uuid.uuid4()), datetime.now(), None,
             new_rule_id, "BLOCK", sanitize_path(reason)
         ))
 
-        print(f"[WAF BLOCK] IP={sanitize_ip(ip)} | trigger={sanitize_path(trigger)!r} | reason={sanitize_path(reason)} --> Rules updated!")
+        print(f"[WAF BLOCK] IP={sanitized_ip} | trigger={sanitize_path(trigger)!r} | reason={sanitize_path(reason)} --> Rules updated!")
         return True
 
 

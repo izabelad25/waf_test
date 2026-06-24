@@ -10,7 +10,6 @@ from pydantic import BaseModel
 
 config_router = APIRouter()
 
-
 #preparing for packaging to exe file
 _BASE = getattr(__import__('sys'), '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
 CONFIG_PATH = os.path.join(os.path.dirname(_BASE), "waf_config.json")
@@ -80,8 +79,10 @@ async def set_config(payload: ConfigPayload):
     PROXY_STATE["config"] = cfg
     PROXY_STATE["client"] = _build_client("127.0.0.1", target_port)
     if old:
-        try: await old.aclose()
-        except: pass
+        try: 
+            await old.aclose()
+        except Exception as e: 
+            print(f"! Failed to close previous HTTP client ! -> {e}")
  
     save_config(cfg)
     return JSONResponse({
@@ -100,14 +101,20 @@ async def check_reachable():
     port = cfg["target_port"]   # the forward port
  
     loop = asyncio.get_event_loop()
+
     try:
         await asyncio.wait_for(
             loop.run_in_executor(None, lambda: _tcp_probe(host, port)), timeout=1.5
         )
         return JSONResponse({"reachable": True,  "target_port": port})
-    except:
+    except (asyncio.TimeoutError, ConnectionRefusedError, OSError):
         return JSONResponse({"reachable": False, "target_port": port})
  
  
 def _tcp_probe(host, port):
-    s = socket.socket(); s.settimeout(1.0); s.connect((host, port)); s.close()
+    s = socket.socket()
+    try:
+        s.settimeout(1.0)
+        s.connect((host, port))
+    finally:
+        s.close()

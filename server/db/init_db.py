@@ -167,7 +167,7 @@ default_rules = [
 
 for rule in default_rules:
     db.execute(
-        "INSERT OR REPLACE INTO rules "
+        "INSERT INTO rules "
         "(rule_id, name, rule_type, target_zone, match_pattern, action, is_active, updated_at) "
         "VALUES (?, ?, ?, ?, ?, ?, TRUE, CURRENT_TIMESTAMP) " 
         "ON CONFLICT (rule_id) DO NOTHING",

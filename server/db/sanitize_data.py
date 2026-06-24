@@ -6,6 +6,8 @@ KEYWORDS_SQL = regex.compile(r'(?i)\b(SELECT|UNION|DROP|DELETE|INSERT|WHERE|TRUN
 def sanitize_ip(ip: str) -> str:
     """192.168.1.1 -> 192[.]168[.]1[.]1"""
     ip = CTRL_CHARACTERS.sub('', str(ip))
+    if '[.]' in ip:
+        return ip[:64] 
     return ip.replace('.', '[.]')[:64]
 
 def sanitize_path(path: str) -> str:

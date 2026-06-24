@@ -1,10 +1,10 @@
 #server
 import asyncio
+import sys
 import uvicorn
-import httpx
 
 #env
-import os
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -19,7 +19,6 @@ from starlette.requests import Request
 #background services
 from db.logger import log_background_listener
 from log_analyzer.analyze import analyzer
-from log_analyzer.alert import sendMail
 from db.archiver_db import archiver
 
 #routes
@@ -27,18 +26,15 @@ from routes.waf_rules import rule_router
 from routes.network_logs import logs_router
 from routes.waf_actions_log import waf_actions_router
 from routes.reverse_proxy import proxy_router
-from routes.waf_config import config_router, init_proxy_state, load_config, save_config, PROXY_STATE
+from routes.waf_config import config_router, init_proxy_state, load_config, PROXY_STATE
 from routes.if_scan import if_scan_router
+
 #port binding + setup
-from port_config import is_port_free, print_instructions
-import sys
+from port_config import is_backend_running, print_instructions
 
-
-
-
-#middleware w security policies
+#  MIDDLEWARE - security policies (CSP + security headers)
 class DashboardCSP(BaseHTTPMiddleware):
-   
+
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
         response.headers["Content-Security-Policy"] = (
@@ -54,10 +50,10 @@ class DashboardCSP(BaseHTTPMiddleware):
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         return response
- 
- 
+
+
 class ProxyCSP(BaseHTTPMiddleware):
-   
+  
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
         
@@ -70,14 +66,54 @@ class ProxyCSP(BaseHTTPMiddleware):
             response.headers["X-Frame-Options"] = "DENY"
         return response
 
-#UI dashboard app  PORT 8000
-# !! proxy app on its separated port only
 
-dashboard_app = FastAPI(title="Firewall - Dashboard")
+#  LIFESPAN HANDLERS
+@asynccontextmanager
+async def dashboard_lifespan(app: FastAPI):
+    #=== startup ===
+    init_proxy_state()
+    
+    bg_tasks = [
+        asyncio.create_task(log_background_listener(), name="logger"),
+        asyncio.create_task(analyzer(), name="analyzer"),
+        asyncio.create_task(archiver(), name="archiver"),
+    ]
+    
+    print(r"""       +.+"+.+"+.+"+.+"+.+"+.+""")
+    print(r"""+.+"+.+"+.+"WAF ACTIVE "+.+"+.+"+.+""")
+    print(r"""       +.+"+.+"+.+"+.+"+.+"+.+""")
+    
+    try:
+        yield  # aplicatia ruleaza intre startup si shutdown
+    finally:
+        #=== shutdown ===
+        print("F i r e b a l l #### shutdown")
+        
+        #cancel bg tasks
+        for task in bg_tasks:
+            task.cancel()
+        
+        await asyncio.gather(*bg_tasks, return_exceptions=True)
 
-#cors middleware + CSP
+
+@asynccontextmanager
+async def proxy_lifespan(app: FastAPI):
+    try:
+        yield
+    finally:
+        client = PROXY_STATE.get("client")
+        if client is not None:
+            try:
+                await client.aclose()
+                print("[OK] Proxy HTTP client closed")
+            except Exception as e:
+                print(f"[WARN] Failed to close proxy HTTP client: {e}")
+
+
+#DASHBOARD APP -- PORT 8000
+dashboard_app = FastAPI(title="WAF Dashboard", lifespan=dashboard_lifespan)
+
 dashboard_app.add_middleware(DashboardCSP)
-
 dashboard_app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -97,13 +133,13 @@ dashboard_app.mount("/client", StaticFiles(directory="client"), name="client")
 async def load_dashboard():
     return FileResponse("client/dashboard.html")
 
-#PROXY app PORT 8080
-#handles the requests and runs the waf engine
 
-proxy_app = FastAPI(title="Fireball - proxy")
+#PROXY APP -- PORT 8080
+#intercepteaza si filtreaza tot traficul catre aplicatia protejata
+
+proxy_app = FastAPI(title="WAF reverse proxy", lifespan=proxy_lifespan)
 
 proxy_app.add_middleware(ProxyCSP)
-
 proxy_app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -113,57 +149,20 @@ proxy_app.add_middleware(
 
 proxy_app.include_router(proxy_router)
 
-
-#START
-
-@dashboard_app.on_event("startup")
-async def startup_listener():
-    init_proxy_state()
-
-    asyncio .create_task(log_background_listener())
-    asyncio.create_task(analyzer())
-    asyncio.create_task(archiver())
-
-    print(r"""       +.+"+.+"+.+"+.+"+.+"+.+""")
-    print(r"""+.+"+.+"+.+"FIREWALL ACTIVE "+.+"+.+"+.+""")
-    print(r"""       +.+"+.+"+.+"+.+"+.+"+.+""")
-
-    #await sendMail("WAF ALERT", "NEW -->  test detected ")
-
-    
-@dashboard_app.on_event("shutdown")
-async def shutdown_listener():
-    
-    print("F i r e b a l l #### shutdown")
-    
-# 2 SERVERS LAUNCHER
+#MAIN == pornire servere
 async def main():
     cfg = load_config()
     target_port = cfg.get("target_port", 3000)        
-         
-    dashboard_port = 8000
-
-    if not is_port_free(target_port):
-      
-        
-        print(f"please read the instructions :) ")
-       
-        sys.exit(1)
- 
-    print_instructions(target_port)
-
-    cfg["target_port"] = target_port
-    cfg["target_host"] = "localhost"
-
     
-    save_config(cfg)
-    PROXY_STATE["config"] = cfg
-    PROXY_STATE["client"] = httpx.AsyncClient(
-        base_url=f"http://127.0.0.1:{target_port}", timeout=15.0
-    )
-
-
-
+    # verificare --> backend ul trb sa ruleze pe target_port
+    if not is_backend_running(target_port):
+        print_instructions(target_port)
+        print(f"\nNo backend detected on port {target_port} "
+              f"read the instructions and start the WAF again :) \n")
+        #sys.exit(1)
+    
+    print(f"Backend active on port {target_port}")
+    
     dashboard_config = uvicorn.Config(
         app=dashboard_app,
         host="127.0.0.1",
@@ -178,25 +177,18 @@ async def main():
         log_level="warning",
     )
 
-   
-    print(f" Open Firewall Dashboard   ->  http://127.0.0.1:8000")
-    print(f" Reverse Proxy             ->  http://127.0.0.1:8080")
-
-    #test email alert
-    
+    print(f" Open WAF Dashboard   ->  http://127.0.0.1:8000")
+    print(f" Reverse Proxy        ->  http://127.0.0.1:8080")
 
     await asyncio.gather(
         uvicorn.Server(dashboard_config).serve(),
         uvicorn.Server(proxy_config).serve(),
     )
 
-
 if __name__ == "__main__":
     asyncio.run(main())
-    
-    
 
-#workflow
-# 1. python main.py
-# 2. PORT=3001 npm start === app starts on internal port
-# 3. open localhost:3000 (waf intercepts ++ app works normally)
+
+# workflow:
+# 1. PORT=3000 npm start  (sau echivalent -> backend ruleaza pe target_port)
+# 2. python main.py       (WAF detecteaza backendul si porneste)

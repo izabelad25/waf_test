@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 from db.init_db import db, CACHE_IPS, CACHE_REGEX, reload_cache
-from typing import Optional
+from typing import Optional, Literal
 import regex
 from db.sanitize_data import sanitize_ip, sanitize_path
 
@@ -21,19 +21,37 @@ protected_fields = {"name", "rule_type", "target_zone", "match_pattern"}
 
 class RuleCreate(BaseModel):
     name: str
-    rule_type: str       # 'IP_MATCH' sau 'REGEX_MATCH'
-    target_zone: str     # 'CLIENT_IP', 'PATH', 'HEADERS', 'QUERY_STRING', 'BODY'
+    rule_type: Literal['IP_MATCH', 'REGEX_MATCH'] 
+    target_zone: Literal['PATH', 'QUERY_STRING', 'HEADERS', 'BODY', 'IP'] 
     match_pattern: str
-    action: str = "BLOCK" #default action
+    action: Literal['BLOCK', 'LOG'] = 'BLOCK' #default action block
+
+    @model_validator(mode='after')
+    def validate_type_zone(self):
+        if self.rule_type == 'IP_MATCH' and self.target_zone != 'IP':
+            raise ValueError("IP_MATCH rules must have target_zone == 'IP' ")
+        if self.rule_type == 'REGEX_MATCH' and self.target_zone == 'IP':
+            raise ValueError("REGEX_MATCH rules cannot use target_zone == 'IP' --> use PATH/QUERY_STRING/HEADERS/BODY")
+        
+        return self
 
 class RuleUpdate(BaseModel):
-    name:          Optional[str]  = None
-    rule_type:     Optional[str]  = None
-    target_zone:   Optional[str]  = None
-    match_pattern: Optional[str]  = None
-    action:        Optional[str]  = None
-    is_active:     Optional[bool] = None
+    name: Optional[str] = None
+    rule_type: Optional[Literal['IP_MATCH', 'REGEX_MATCH']] = None
+    target_zone: Optional[Literal['PATH', 'QUERY_STRING', 'HEADERS', 'BODY', 'IP']]  = None
+    match_pattern: Optional[str] = None
+    action: Optional[Literal['BLOCK', 'LOG']] = None
+    is_active: Optional[bool] = None
 
+    @model_validator(mode='after')
+    def validate_type_zone(self):
+        if self.rule_type is not None and self.target_zone is not None:
+            if self.rule_type == 'IP_MATCH' and self.target_zone != 'IP':
+                raise ValueError("IP_MATCH rules must have target_zone == 'IP' ")
+        if self.rule_type == 'REGEX_MATCH' and self.target_zone == 'IP':
+            raise ValueError("REGEX_MATCH rules cannot use target_zone == 'IP' --> use PATH/QUERY_STRING/HEADERS/BODY")
+
+        return self
 #functions for VALIDATING NEW RULES / UPDATED RULES
 def validate_regex(pattern: str) -> None:
     #checking if the pattern added compiles
@@ -44,9 +62,8 @@ def validate_regex(pattern: str) -> None:
                             detail=f"Invalid regex pattern --> {e}")
 
 def check_conflicts(
-      zone: str,
+    zone: str,
     pattern: str,
-    action: str,
     exclude_id: Optional[int] = None  
 ) -> list[dict]:
     #checks for conflicts with the existent rules
@@ -68,9 +85,9 @@ def check_conflicts(
         #DUPLICATE check
         if r_pattern == pattern:
             conflicts.append({
-                "type":        "DUPLICATE",
-                "rule_id":     r_id,
-                "rule_name":   r_name,
+                "type": "DUPLICATE",
+                "rule_id": r_id,
+                "rule_name": r_name,
                 "description": (
                     f"Duplicate -> Rule #{r_id} '{r_name}' has the exact same pattern "
                     f"in zone '{zone}'."
@@ -103,11 +120,11 @@ async def get_all_rules():
 @rule_router.post("/waf/rules")
 async def create_rule(rule: RuleCreate):
     #validate regex -- compiles?
-    if(rule.rule_type=='REGEX_MATCH'):
+    if rule.rule_type=='REGEX_MATCH':
         validate_regex(rule.match_pattern)
 
     #check conflict -- duplicate?
-    conflicts = check_conflicts(rule.target_zone, rule.match_pattern, rule.action)
+    conflicts = check_conflicts(rule.target_zone, rule.match_pattern)
 
     if conflicts:
         raise HTTPException(
@@ -119,12 +136,19 @@ async def create_rule(rule: RuleCreate):
         )
     #autoincrement pt next id
     next_id = db.execute("SELECT COALESCE(MAX(rule_id), 0) + 1 FROM rules").fetchone()[0]
+    
     if(rule.rule_type == 'IP_MATCH'):
-        db.execute("INSERT INTO rules (rule_id, name, rule_type, target_zone, match_pattern, action, is_active)" \
-        "VALUES (?, ?, ?, ?, ?, ?, ?)", (next_id, rule.name, rule.rule_type, rule.target_zone, sanitize_ip(rule.match_pattern), rule.action, True))
-
-    db.execute("INSERT INTO rules (rule_id, name, rule_type, target_zone, match_pattern, action, is_active)" \
-    "VALUES (?, ?, ?, ?, ?, ?, ?)", (next_id, rule.name, rule.rule_type, rule.target_zone, rule.match_pattern, rule.action, True))
+         pattern_to_store = sanitize_ip(rule.match_pattern)
+    else:
+        pattern_to_store = rule.match_pattern
+    
+    db.execute(
+        "INSERT INTO rules "
+        "(rule_id, name, rule_type, target_zone, match_pattern, action, is_active) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (next_id, rule.name, rule.rule_type, rule.target_zone,
+         pattern_to_store, rule.action, True)
+    )
 
     reload_cache()
     return {"status": "success", "message": f"Rule '{rule.name}' created", "id": next_id}
@@ -157,6 +181,18 @@ async def update_rule(rule_id: int, updates: RuleUpdate):
                     "editable_fields": ["action", "is_active"]
                 }
             )
+        
+    if updates.rule_type is not None and updates.rule_type != current_type:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "message": (
+                    f"Cannot change rule_type from '{current_type}' to "
+                    f"'{updates.rule_type}'. Rule type is immutable -> "
+                    f"delete this rule and create a new one with the desired type."
+                )
+            }
+        )
 
     #for checks (new values for update or the current ones)   
     effective_zone    = updates.target_zone   or current_zone
@@ -171,10 +207,13 @@ async def update_rule(rule_id: int, updates: RuleUpdate):
     )
 
     if pattern_changing or zone_changing:
-
-        if current_type == 'REGEX':
+        if current_type == 'REGEX_MATCH':
             validate_regex(effective_pattern)
-        conflicts = check_conflicts(effective_zone, effective_pattern, updates.action or "BLOCK", exclude_id=rule_id)
+    
+        conflicts = check_conflicts(
+            effective_zone, effective_pattern,
+            exclude_id=rule_id
+        )
 
         if conflicts:
             raise HTTPException(
@@ -185,15 +224,16 @@ async def update_rule(rule_id: int, updates: RuleUpdate):
                 }
             )
 
-    
     updatable = {
         "name":          updates.name,
-        "rule_type":     updates.rule_type,
         "target_zone":   updates.target_zone,
         "match_pattern": updates.match_pattern,
         "action":        updates.action,
         "is_active":     updates.is_active,
     }
+    if updates.match_pattern is not None and current_type == 'IP_MATCH':
+        updatable["match_pattern"] = sanitize_ip(updates.match_pattern)
+
     for col, val in updatable.items():
         if val is not None:
             db.execute(

@@ -1,5 +1,4 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, Query
 
 from db.init_db import db
 
@@ -9,7 +8,8 @@ logs_router = APIRouter()
 
 #READ
 @logs_router.get("/waf/network_logs")
-async def get_logs(limit: int = 100, offset: int = 0):
+async def get_logs( limit: int = Query(default=100, ge=1, le=1000),
+                    offset: int = Query(default=0, ge=0) ):
     rows = db.execute("SELECT * FROM activity_logs ORDER BY timestamp DESC LIMIT ? OFFSET ?", (limit, offset)).fetchall()
 
     logs_list = []
@@ -29,35 +29,34 @@ async def get_logs(limit: int = 100, offset: int = 0):
 #ROUTE FOR ANALYTICS !
 @logs_router.get("/waf/analytics")
 async def get_log_stats():
-    
     total_reqs = db.execute("SELECT COUNT(*) FROM activity_logs").fetchone()[0]
 
     blocked_requests = db.execute("SELECT COUNT(*) FROM activity_logs WHERE status_code = 403").fetchone()[0]
 
     #avg response time == doar cererile forwardate (blocate au response_time 0.0)
     avg_response_ms = db.execute(
-        "SELECT AVG(response_time_ms) FROM activity_logs WHERE response_time_ms > 0"
+        "SELECT COALESCE(AVG(response_time_ms), 0) FROM activity_logs WHERE response_time_ms > 0"
     ).fetchone()[0]
 
     #top 3 cele mai active adrese ip 
-    top_ips = db.execute(
-        "SELECT client_ip, COUNT(*) as topIPs " \
-        " FROM activity_logs " \
-        " GROUP BY client_ip " \
-        " ORDER BY topIPs DESC " \
-        " LIMIT 3"
-    ).fetchall()
+    top_ips = db.execute("""
+                            SELECT client_ip, COUNT(*) AS topIPs
+                            FROM activity_logs
+                            GROUP BY client_ip
+                            ORDER BY topIPs DESC
+                            LIMIT 3
+                        """).fetchall()
 
     #attack types == grupare a blocarilor dupa NUMELE regulii
-    attack_types = db.execute(
-        "SELECT r.name, COUNT(*) as cnt "
-        " FROM firewall_actions fa "
-        " LEFT JOIN rules r ON fa.rule_id = r.rule_id "
-        " WHERE fa.action_taken = 'BLOCK' AND r.name IS NOT NULL "
-        " GROUP BY r.name "
-        " ORDER BY cnt DESC "
-        " LIMIT 6"
-    ).fetchall()
+    attack_types = db.execute("""
+                                SELECT r.name, COUNT(*) AS cnt
+                                FROM firewall_actions fa
+                                LEFT JOIN rules r ON fa.rule_id = r.rule_id
+                                WHERE fa.action_taken = 'BLOCK' AND r.name IS NOT NULL
+                                GROUP BY r.name
+                                ORDER BY cnt DESC
+                                LIMIT 6
+                            """).fetchall()
 
     return{
         "total_requests": total_reqs,
@@ -66,7 +65,6 @@ async def get_log_stats():
         "top_ips": [{"ip": row[0], "topIPs": row[1]} for row in top_ips],
         "attack_types": [{"type": row[0], "count": row[1]} for row in attack_types],
     }
-
 
 #debug
 @logs_router.get("/waf/debug")
