@@ -116,9 +116,12 @@ dashboard_app = FastAPI(title="WAF Dashboard", lifespan=dashboard_lifespan)
 dashboard_app.add_middleware(DashboardCSP)
 dashboard_app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=[
+        "http://127.0.0.1:8000",
+        "http://localhost:8000",
+    ],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"]
 )
 
 dashboard_app.include_router(rule_router)
@@ -144,7 +147,7 @@ proxy_app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*"]
 )
 
 proxy_app.include_router(proxy_router)
